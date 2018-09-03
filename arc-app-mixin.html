@@ -104,7 +104,10 @@ global.ArcComponents.ArcAppMixin = Polymer.dedupingMixin((base) => {
         appMessages: Array,
         // If true, messages center is opened.
         messageCenterOpened: Boolean,
-        // True if application update is possible.
+        /**
+         * True if application update is possible.
+         * In web version it means rthe service worker updated files.
+         */
         hasAppUpdate: Boolean,
         /**
          * A scroll target for the components that relays on this property.
