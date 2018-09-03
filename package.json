@@ -1,0 +1,29 @@
+{
+  "name": "@advanced-rest-client/arc-app-mixin",
+  "description": "ARC main application mixing to be shared between different versions of ARC (web, electron, chrome)",
+  "version": "2.0.0-preview",
+  "license": "Apache-2.0",
+  "main": "arc-app-mixin.html",
+  "authors": [
+    "Pawel Psztyc",
+    "The Advanced REST client authors <arc@mulesoft.com>"
+  ],
+  "devDependencies": {
+    "@polymer/gen-typescript-declarations": "^1.1.1"
+  },
+  "private": false,
+  "scripts": {
+    "lint": "polymer lint arc-app-mixin.html",
+    "test-sauce": "polymer test --plugin sauce --job-name \"arc-app-mixin:local-test\"",
+    "test": "polymer test --plugin local",
+    "update-types": "gen-typescript-declarations --deleteExisting --outDir ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/advanced-rest-client/arc-app-mixin.git"
+  },
+  "bugs": {
+    "url": "https://github.com/advanced-rest-client/arc-app-mixin/issues",
+    "email": "arc@mulesoft.com"
+  }
+}

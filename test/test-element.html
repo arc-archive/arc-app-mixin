@@ -1,0 +1,43 @@
+<link rel="import" href="../../polymer/polymer-element.html">
+<link rel="import" href="../arc-app-mixin.html">
+
+<dom-module id="test-element">
+  <template>
+    <style include="api-form-styles">
+    :host {
+      display: block;
+    }
+    </style>
+  </template>
+  <script>
+  function noop() {}
+  /**
+   * @customElement
+   * @polymer
+   * @demo demo/index.html
+   * @appliesMixin ArcComponents.ArcAppMixin
+   */
+  class TestElement extends ArcComponents.ArcAppMixin(Polymer.Element) {
+    static get is() {
+      return 'test-element';
+    }
+
+    connectedCallback() {
+      super.connectedCallback();
+      if (!this.$) {
+        this.$ = {};
+      }
+      this.$.workspace = {
+        saveOpened: noop,
+        removeRequest: noop,
+        clearWorkspace: noop,
+        activeRequests: [],
+        addEmptyRequest: noop,
+        selected: 0,
+        sendCurrent: noop
+      };
+    }
+  }
+  window.customElements.define(TestElement.is, TestElement);
+  </script>
+</dom-module>
