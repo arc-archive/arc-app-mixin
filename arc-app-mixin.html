@@ -209,6 +209,14 @@ global.ArcComponents.ArcAppMixin = Polymer.dedupingMixin((base) => {
           id = 'google-drive-browser';
           _path = 'google-drive-browser/google-drive-browser';
           break;
+        case 'data-import':
+          id = 'import-panel';
+          _path = 'import-panel/import-panel';
+          break;
+        case 'data-export':
+          id = 'export-panel';
+          _path = 'export-panel/export-panel';
+          break;
       }
       if (!id) {
         console.error(`The base route ${page} is not recognized`);
