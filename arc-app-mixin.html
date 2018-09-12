@@ -383,7 +383,7 @@ global.ArcComponents.ArcAppMixin = Polymer.dedupingMixin((base) => {
       this.dispatchEvent(e);
       if (!e.defaultPrevented) {
         // throw new Error('Settings provider not found.');
-        console.warn(`[arc-electron-app] Settings provider not found`);
+        console.warn(`[arc-app] Settings provider not found`);
         return;
       }
       return e.detail.result
