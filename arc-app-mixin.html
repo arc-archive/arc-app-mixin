@@ -130,7 +130,11 @@ global.ArcComponents.ArcAppMixin = Polymer.dedupingMixin((base) => {
           value: function() {
             return console;
           }
-        }
+        },
+        /**
+         * Current setting value for list types.
+         */
+        viewListTypeSettings: String
       };
     }
 
@@ -364,12 +368,12 @@ global.ArcComponents.ArcAppMixin = Polymer.dedupingMixin((base) => {
       }));
     }
     /**
-     * Reads current settings and enables Google Analytics if it's not
-     * disabled by the uers.
+     * Initialize global settings variables
      *
-     * @return {Promise}
+     * @return {Promise<Object>} A promise resolved to a settings object
+     * Note that `viewListType` and `telemetry` are processed by default.
      */
-    setupAnalytics() {
+    initSettings() {
       const e = new CustomEvent('settings-read', {
         composed: true,
         cancelable: true,
@@ -384,12 +388,16 @@ global.ArcComponents.ArcAppMixin = Polymer.dedupingMixin((base) => {
       }
       return e.detail.result
       .then((settings) => {
+        if (typeof settings.viewListType !== 'undefined') {
+          this.viewListTypeSettings = settings.viewListType;
+        }
         if (settings.telemetry === false) {
           this._analyticsDisabled();
         } else {
           this._analyticsEnabled();
           setTimeout(() => this._telemetryScreen(), 20);
         }
+        return settings;
       });
     }
     /**
@@ -427,15 +435,25 @@ global.ArcComponents.ArcAppMixin = Polymer.dedupingMixin((base) => {
     }
     /**
      * Handles settings change event.
-     * If changed setting is `telemetry` then it upodates GA state.
      *
      * @param {CustomEvent} e
      */
     _settingChanged(e) {
-      if (e.detail.name !== 'telemetry') {
-        return;
+      const v = e.detail.value;
+      switch (e.detail.name) {
+        case 'telemetry':
+          this._telemetryChanged(v);
+          break;
+        case 'viewListType':
+          this.viewListTypeSettings = v;
+          break;
       }
-      let value = e.detail.value;
+    }
+    /**
+     * A function that handles `telemetry` property chnage.
+     * @param {String|Boolean} value New value
+     */
+    _telemetryChanged(value) {
       if (typeof value !== 'boolean') {
         value = value === 'false' ? false : true;
       }
