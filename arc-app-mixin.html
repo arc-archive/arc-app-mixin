@@ -51,13 +51,9 @@ global.ArcComponents.ArcAppMixin = Polymer.dedupingMixin((base) => {
          */
         componentsDir: {type: String, value: ''},
         /**
-         * Current route data
+         * Additional route params read from navigation
          */
-        route: Object,
-        /**
-         * Main route data
-         */
-        routeData: Object,
+        routeParams: Object,
         /**
          * When true then a source components are being loaded.
          */
@@ -66,7 +62,7 @@ global.ArcComponents.ArcAppMixin = Polymer.dedupingMixin((base) => {
          * Currently opened application screen
          * @type {String}
          */
-        page: {type: String, observer: '_pageChanged'},
+        page: {type: String, value: 'request', observer: '_pageChanged'},
         /**
          * Google Analytics custom dimmensions
          */
@@ -171,66 +167,65 @@ global.ArcComponents.ArcAppMixin = Polymer.dedupingMixin((base) => {
      */
     _pageChanged(page) {
       let id;
-      let _path;
+      let path;
       switch (page) {
         case 'request':
           id = 'arc-request-workspace';
-          _path = 'arc-request-workspace/arc-request-workspace';
+          path = 'arc-request-workspace/arc-request-workspace';
           break;
         case 'project':
           id = 'project-details';
-          _path = 'project-details/project-details';
+          path = 'project-details/project-details';
           break;
         case 'hosts-rules':
           id = 'host-rules-editor';
-          _path = 'host-rules-editor/host-rules-editor';
+          path = 'host-rules-editor/host-rules-editor';
           break;
         case 'cookie-manager':
           id = 'cookie-manager';
-          _path = 'cookie-manager/cookie-manager';
+          path = 'cookie-manager/cookie-manager';
           break;
         case 'settings':
           id = 'arc-settings-panel';
-          _path = 'arc-settings-panel/arc-settings-panel';
+          path = 'arc-settings-panel/arc-settings-panel';
           break;
         case 'about':
           id = 'about-arc-electron';
-          _path = 'about-arc-electron/about-arc-electron';
+          path = 'about-arc-electron/about-arc-electron';
           break;
         case 'socket':
           id = 'websocket-panel';
-          _path = 'websocket-panel/websocket-panel';
+          path = 'websocket-panel/websocket-panel';
           break;
         case 'exchange-search':
           id = 'exchange-search-panel';
-          _path = 'exchange-search-panel/exchange-search-panel';
+          path = 'exchange-search-panel/exchange-search-panel';
           break;
         case 'api-console':
           id = 'api-console';
-          _path = 'api-console/api-console';
+          path = 'api-console/api-console';
           break;
         case 'drive':
           id = 'google-drive-browser';
-          _path = 'google-drive-browser/google-drive-browser';
+          path = 'google-drive-browser/google-drive-browser';
           break;
         case 'data-import':
           id = 'import-panel';
-          _path = 'import-panel/import-panel';
+          path = 'import-panel/import-panel';
           break;
         case 'data-export':
           id = 'export-panel';
-          _path = 'export-panel/export-panel';
+          path = 'export-panel/export-panel';
           break;
-      }
-      if (!id) {
-        console.error(`The base route ${page} is not recognized`);
-        return;
+        default:
+          console.error(`The base route ${page} is not recognized`);
+          return;
       }
       const cls = window.customElements.get(id);
       if (cls) {
         return;
       }
-      this._loadComponent(_path)
+      this._loadComponent(path)
       .catch((cmp) => this._reportComponentLoadingError(cmp));
     }
     /**
@@ -281,44 +276,29 @@ global.ArcComponents.ArcAppMixin = Polymer.dedupingMixin((base) => {
      */
     _handleNavigation(e) {
       const params = e.detail;
-      let url;
-      switch (params.base) {
-        case 'default': url = '/request/latest/0/new'; break;
-        case 'history': url = '/history'; break;
-        case 'settings': url = '/settings'; break;
-        case 'about': url = '/about'; break;
-        case 'socket': url = '/socket'; break;
-        case 'saved': url = '/saved'; break;
-        case 'data-import': url = '/data-import'; break;
-        case 'data-export': url = '/data-export'; break;
+      const page = params.base;
+      let routeParams;
+      switch (page) {
         case 'project':
-          if (params.id) {
-            url = '/project/' + params.id;
-          }
-        break;
+          routeParams = {
+            id: params.id
+          };
+          break;
         case 'request':
-          const type = params.type || 'new';
-          const id = params.id || 'new';
-          url = '/request/' + type + '/' + encodeURIComponent(id) + '/';
-        break;
-        case 'drive': url = '/drive'; break;
-        case 'cookie-manager': url = '/cookie-manager'; break;
+          routeParams = {
+            id: params.id,
+            type: params.type
+          };
+          break;
         case 'api-console':
-          let acId;
-          if (params.id) {
-            acId = encodeURIComponent(params.id);
-          } else {
-            acId = 'current';
-          }
-          url = '/api-console/' + acId;
-        break;
-        case 'rest-projects': url = '/rest-projects'; break;
-        case 'exchange-search': url = '/exchange-search'; break;
-        case 'hosts-rules': url = '/hosts-rules'; break;
-        case 'themes-panel': url = '/themes-panel'; break;
+          routeParams = {
+            id: params.id
+          };
+          break;
       }
-      if (url) {
-        this.set('route.path', url);
+      if (page) {
+        this.set('page', page);
+        this.set('routeParams', routeParams);
         this._telemetryScreen();
       } else {
         this.dispatchEvent(new CustomEvent('send-analytics', {
