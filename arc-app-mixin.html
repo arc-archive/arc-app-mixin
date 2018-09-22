@@ -144,6 +144,7 @@ global.ArcComponents.ArcAppMixin = Polymer.dedupingMixin((base) => {
       this._settingChanged = this._settingChanged.bind(this);
       this._appVersionRequestHandler = this._appVersionRequestHandler.bind(this);
       this._googleOauthTokenRequested = this._googleOauthTokenRequested.bind(this);
+      this._ispectImportHandler = this._ispectImportHandler.bind(this);
     }
 
     connectedCallback() {
@@ -152,6 +153,7 @@ global.ArcComponents.ArcAppMixin = Polymer.dedupingMixin((base) => {
       window.addEventListener('settings-changed', this._settingChanged);
       window.addEventListener('app-version', this._appVersionRequestHandler);
       window.addEventListener('google-autorize', this._googleOauthTokenRequested);
+      window.addEventListener('import-data-inspect', this._ispectImportHandler);
     }
 
     disconnectedCallback() {
@@ -160,6 +162,7 @@ global.ArcComponents.ArcAppMixin = Polymer.dedupingMixin((base) => {
       window.removeEventListener('settings-changed', this._settingChanged);
       window.removeEventListener('app-version', this._appVersionRequestHandler);
       window.removeEventListener('google-autorize', this._googleOauthTokenRequested);
+      window.removeEventListener('import-data-inspect', this._ispectImportHandler);
     }
     /**
      * Loads a page component when page changes.
@@ -671,27 +674,32 @@ global.ArcComponents.ArcAppMixin = Polymer.dedupingMixin((base) => {
      */
     _requestAuthToken() {}
     /**
-     * Tests if incomming data is a single request.
-     * @param {Object} data
-     * @return {Boolean}
+     * Abstract method to be implemented by ARC instances to notify user about
+     * an error.
+     *
+     * @param {String} message A message to render
      */
-    _isSingleRequest(data) {
-      if (!data.requests || !data.requests.length) {
-        return false;
-      }
-      if (data.requests.length !== 1) {
-        return false;
-      }
-      if (data.projects && data.projects.length === 0) {
-        delete data.projects;
-      }
-      if (data.history && data.history.length === 0) {
-        delete data.history;
-      }
-      if (Object.keys(data).length === 4) {
-        return true;
-      }
-      return false;
+    notifyError(message) {
+      console.error(message);
+    }
+    /**
+     * Handler for `import-data-inspect`. Opens import panel and adds data to it.
+     * @param {CustomEvent} e
+     */
+    _ispectImportHandler(e) {
+      const {data} = e.detail;
+      this._loadComponent('import-panel/import-panel')
+      .then(() => {
+        const node = this.shadowRoot.querySelector('import-panel');
+        if (!node) {
+          this.notifyError('Import panel not found');
+          return;
+        }
+        node.data = data;
+        node.selectedPage = 3;
+        this.openImport();
+      })
+      .catch((cmp) => this._reportComponentLoadingError(cmp));
     }
   }
   return ArcAppMixinImpl;
