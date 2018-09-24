@@ -128,9 +128,15 @@ global.ArcComponents.ArcAppMixin = Polymer.dedupingMixin((base) => {
           }
         },
         /**
-         * Current setting value for list types.
+         * Application user configuration read from the config file.
+         * It may not be ready when the app is initialized.
          */
-        viewListTypeSettings: String
+        config: Object,
+        /**
+         * True if history should be enabled. This value is set from settings
+         * object.
+         */
+        historyEnabled: Boolean
       };
     }
 
@@ -353,8 +359,7 @@ global.ArcComponents.ArcAppMixin = Polymer.dedupingMixin((base) => {
     /**
      * Initialize global settings variables
      *
-     * @return {Promise<Object>} A promise resolved to a settings object
-     * Note that `viewListType` and `telemetry` are processed by default.
+     * @return {Promise<Object>} A promise resolved to a settings object.
      */
     initSettings() {
       const e = new CustomEvent('settings-read', {
@@ -371,15 +376,20 @@ global.ArcComponents.ArcAppMixin = Polymer.dedupingMixin((base) => {
       }
       return e.detail.result
       .then((settings) => {
-        if (typeof settings.viewListType !== 'undefined') {
-          this.viewListTypeSettings = settings.viewListType;
-        }
+        this.set('config', settings);
         if (settings.telemetry === false) {
           this._analyticsDisabled();
         } else {
           this._analyticsEnabled();
           setTimeout(() => this._telemetryScreen(), 20);
         }
+        let historyEnabled;
+        if (typeof settings.historyEnabled === 'undefined') {
+          historyEnabled = true;
+        } else {
+          historyEnabled = settings.historyEnabled;
+        }
+        this.set('historyEnabled', historyEnabled);
         return settings;
       });
     }
@@ -422,13 +432,15 @@ global.ArcComponents.ArcAppMixin = Polymer.dedupingMixin((base) => {
      * @param {CustomEvent} e
      */
     _settingChanged(e) {
+      const n = e.detail.name;
       const v = e.detail.value;
-      switch (e.detail.name) {
+      this.set('config.' + n, v);
+      switch (n) {
         case 'telemetry':
           this._telemetryChanged(v);
           break;
-        case 'viewListType':
-          this.viewListTypeSettings = v;
+        case 'historyEnabled':
+          this.set('historyEnabled', v);
           break;
       }
     }
