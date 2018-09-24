@@ -136,7 +136,23 @@ global.ArcComponents.ArcAppMixin = Polymer.dedupingMixin((base) => {
          * True if history should be enabled. This value is set from settings
          * object.
          */
-        historyEnabled: Boolean
+        historyEnabled: Boolean,
+        /**
+         * Configuration object related to ARC menu.
+         * It is used with menu popups. When a menu panel is pop out to new
+         * window then selected menu is not rendered.
+         *
+         * This mixin does not provide methods to listen for changes in this
+         * object as implementation is different dependening on the platform.
+         *
+         * Available keys:
+         * - menuDisabled - true when menu should not be visible in the UI
+         * - hideHistory
+         * - hideSaved
+         * - hideProjects
+         * - hideApis
+         */
+        menuConfig: Object
       };
     }
 
