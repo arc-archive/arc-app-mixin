@@ -451,7 +451,17 @@ global.ArcComponents.ArcAppMixin = Polymer.dedupingMixin((base) => {
       }
       this.workspace.selected = 0;
     }
-
+    /**
+     * Duplicates tab values at a position
+     * @param {Number} index Selected tab
+     */
+    duplicateWorkspaceTab(index) {
+      if (this.page !== 'request') {
+        return;
+      }
+      index = Number(index);
+      this.workspace.duplicateTab(index);
+    }
     /**
      * Returns number of currently opened tabs
      *
