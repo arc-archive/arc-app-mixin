@@ -203,7 +203,14 @@ global.ArcComponents.ArcAppMixin = Polymer.dedupingMixin((base) => {
      */
     _loadComponent(path) {
       return new Promise((resolve, reject) => {
-        const componentUrl = `${this.componentsDir}/bower_components/${path}.html`;
+        let componentUrl = '';
+        if (this.componentsDir) {
+          componentUrl = this.componentsDir;
+          if (componentUrl[componentUrl.length - 1] !== '/') {
+            componentUrl += '/';
+          }
+        }
+        componentUrl += `bower_components/${path}.html`;
         this._loadingSources = true;
         Polymer.importHref(componentUrl, () => {
           this._loadingSources = false;
