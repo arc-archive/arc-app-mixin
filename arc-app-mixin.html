@@ -204,13 +204,16 @@ global.ArcComponents.ArcAppMixin = Polymer.dedupingMixin((base) => {
     _loadComponent(path) {
       return new Promise((resolve, reject) => {
         let componentUrl = '';
+        let dir;
         if (this.componentsDir) {
-          componentUrl = this.componentsDir;
-          if (componentUrl[componentUrl.length - 1] !== '/') {
-            componentUrl += '/';
+          dir = this.componentsDir;
+          if (dir[dir.length - 1] !== '/') {
+            dir += '/';
           }
+        } else {
+          dir += 'bower_components/';
         }
-        componentUrl += `bower_components/${path}.html`;
+        componentUrl = `${dir}${path}.html`;
         this._loadingSources = true;
         Polymer.importHref(componentUrl, () => {
           this._loadingSources = false;
@@ -223,7 +226,7 @@ global.ArcComponents.ArcAppMixin = Polymer.dedupingMixin((base) => {
     }
 
     _reportComponentLoadingError(url) {
-      console.error(`Unable to load component from ${url}`);
+      console.warn(`Unable to load component from ${url}`);
     }
     /**
      * This component ensures that the workspace is loaded into the DOM.

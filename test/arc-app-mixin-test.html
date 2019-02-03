@@ -7,23 +7,64 @@
   <script src="../../webcomponentsjs/webcomponents-loader.js"></script>
   <script src="../../web-component-tester/browser.js"></script>
   <link rel="import" href="test-element.html">
+  <link rel="import" href="../../polymer/lib/utils/import-href.html">
 </head>
 <body>
   <test-fixture id="Basic">
     <template>
-      <test-element></test-element>
+      <test-element components-dir="../../../components"></test-element>
     </template>
   </test-fixture>
 
   <script>
-  suite('arc-app-mixin', () => {
+  suite('_loadComponent()', () => {
     let element;
     setup(() => {
       element = fixture('Basic');
     });
 
-    test('Initializes the element', () => {
-      assert.ok(element);
+    test('Loads a component', () => {
+      return element._loadComponent('paper-checkbox/paper-checkbox')
+      .then(() => {
+        const instance = window.customElements.get('paper-checkbox');
+        assert.ok(instance);
+      });
+    });
+
+    test('Rejects when component cannot be loaded', () => {
+      return element._loadComponent('nothing-here/and-here')
+      .then(() => {
+        throw new Error('Should not resolve');
+      })
+      .catch((cause) => {
+        assert.equal(cause, '../../../components/nothing-here/and-here.html');
+      });
+    });
+  });
+
+  suite('_reportComponentLoadingError()', () => {
+    let element;
+    setup(() => {
+      element = fixture('Basic');
+    });
+
+    test('Does nothing', () => {
+      element._reportComponentLoadingError();
+    });
+  });
+
+  suite('_loadWorkspace()', () => {
+    let element;
+    setup(() => {
+      element = fixture('Basic');
+    });
+
+    test('Calls _loadComponent() with argument', () => {
+      const spy = sinon.spy(element, '_loadComponent');
+      const result = element._loadWorkspace();
+      assert.isTrue(spy.called);
+      assert.equal(spy.args[0][0], 'arc-request-workspace/arc-request-workspace');
+      return result.catch(() => {});
     });
   });
   </script>

@@ -3,7 +3,7 @@
 
 <dom-module id="test-element">
   <template>
-    <style include="api-form-styles">
+    <style>
     :host {
       display: block;
     }
@@ -31,7 +31,7 @@
         saveOpened: noop,
         removeRequest: noop,
         clearWorkspace: noop,
-        activeRequests: [],
+        activeRequests: [{_id: 1}, {_id: 2}],
         addEmptyRequest: noop,
         selected: 0,
         sendCurrent: noop
