@@ -211,7 +211,7 @@ global.ArcComponents.ArcAppMixin = Polymer.dedupingMixin((base) => {
             dir += '/';
           }
         } else {
-          dir += 'bower_components/';
+          dir = 'bower_components/';
         }
         componentUrl = `${dir}${path}.html`;
         this._loadingSources = true;
@@ -285,7 +285,7 @@ global.ArcComponents.ArcAppMixin = Polymer.dedupingMixin((base) => {
      * Sends screen view to Google Analytics
      */
     _telemetryScreen() {
-      let screenName = '[unknown]';
+      let screenName = this.page;
       switch (this.page) {
         case 'history': screenName = 'History'; break;
         case 'settings': screenName = 'Settings'; break;
@@ -331,7 +331,7 @@ global.ArcComponents.ArcAppMixin = Polymer.dedupingMixin((base) => {
       if (!e.defaultPrevented) {
         // throw new Error('Settings provider not found.');
         console.warn(`[arc-app] Settings provider not found`);
-        return;
+        return Promise.resolve({});
       }
       return e.detail.result
       .then((settings) => {
@@ -343,7 +343,7 @@ global.ArcComponents.ArcAppMixin = Polymer.dedupingMixin((base) => {
           setTimeout(() => this._telemetryScreen(), 20);
         }
         let historyEnabled;
-        if (typeof settings.historyEnabled === 'undefined') {
+        if (typeof settings.historyEnabled !== 'boolean') {
           historyEnabled = true;
         } else {
           historyEnabled = settings.historyEnabled;
@@ -393,6 +393,9 @@ global.ArcComponents.ArcAppMixin = Polymer.dedupingMixin((base) => {
     _settingChanged(e) {
       const n = e.detail.name;
       const v = e.detail.value;
+      if (!this.config) {
+        this.config = {};
+      }
       this.set('config.' + n, v);
       switch (n) {
         case 'telemetry':
@@ -449,7 +452,7 @@ global.ArcComponents.ArcAppMixin = Polymer.dedupingMixin((base) => {
     }
     /**
      * Closes all workspace tabs but selected.
-     * @param {Number} index Selected tab
+     * @param {Number} index Index of a tab to leave in workspace.
      */
     closeOtherWorkspaceTabs(index) {
       index = Number(index);
@@ -484,7 +487,24 @@ global.ArcComponents.ArcAppMixin = Polymer.dedupingMixin((base) => {
       }
       return workspace.activeRequests.length;
     }
-
+    /**
+     * Opens new tab in the request workspace.
+     */
+    newRequestTab() {
+      if (this.page !== 'request') {
+        return;
+      }
+      this.workspace.addEmptyRequest();
+    }
+    /**
+     * Sends currently opened request.
+     */
+    sendCurrentTab() {
+      if (this.page !== 'request') {
+        return;
+      }
+      this.workspace.sendCurrent();
+    }
     /**
      * Updates a request object in this window for a specific tab.
      *
@@ -496,12 +516,16 @@ global.ArcComponents.ArcAppMixin = Polymer.dedupingMixin((base) => {
       this.log.info('Updating request object...');
       const workspace = this.workspace;
       if (typeof index !== 'number') {
-        this.log.info('Tab not provided. Using current selection...');
+        this.log.info('Tab index not set. Using current selection...');
         index = workspace.selected;
       }
       workspace.updateRequestObject(request, index);
     }
-
+    /**
+     * Dispatches `navigate` event with passed `detail`.
+     * @param {Object} detail The detail object to set on the event.
+     * Each navigate event requires `base` property to be set.
+     */
     _dispatchNavigate(detail) {
       this.dispatchEvent(new CustomEvent('navigate', {
         bubbles: true,
@@ -613,24 +637,6 @@ global.ArcComponents.ArcAppMixin = Polymer.dedupingMixin((base) => {
       this.page = 'request';
     }
     /**
-     * Opens new tab in the request workspace.
-     */
-    newRequestTab() {
-      if (this.page !== 'request') {
-        return;
-      }
-      this.workspace.addEmptyRequest();
-    }
-    /**
-     * Sends currently opened request.
-     */
-    sendCurrentTab() {
-      if (this.page !== 'request') {
-        return;
-      }
-      this.workspace.sendCurrent();
-    }
-    /**
      * Handles ARC components event for application version.
      * @param {CustomEvent} e
      */
@@ -653,7 +659,9 @@ global.ArcComponents.ArcAppMixin = Polymer.dedupingMixin((base) => {
      * @param {Boolean} interactive
      * @param {Array<String>} scope
      */
-    _requestAuthToken() {}
+    _requestAuthToken() {
+      console.warn('_requestAuthToken() not implemented.');
+    }
     /**
      * Abstract method to be implemented by ARC instances to notify user about
      * an error.
@@ -661,15 +669,16 @@ global.ArcComponents.ArcAppMixin = Polymer.dedupingMixin((base) => {
      * @param {String} message A message to render
      */
     notifyError(message) {
-      console.error(message);
+      console.warn(message);
     }
     /**
      * Handler for `import-data-inspect`. Opens import panel and adds data to it.
      * @param {CustomEvent} e
+     * @return {Promise} A promise resolved when the component is loaded. It for tests.
      */
     _ispectImportHandler(e) {
       const {data} = e.detail;
-      this._loadComponent('import-panel/import-panel')
+      return this._loadComponent('import-panel/import-panel')
       .then(() => {
         const node = this.shadowRoot.querySelector('import-panel');
         if (!node) {

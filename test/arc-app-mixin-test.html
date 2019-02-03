@@ -12,15 +12,32 @@
 <body>
   <test-fixture id="Basic">
     <template>
+      <test-element></test-element>
+    </template>
+  </test-fixture>
+
+  <test-fixture id="Component">
+    <template>
       <test-element components-dir="../../../components"></test-element>
     </template>
   </test-fixture>
 
+  <test-fixture id="CustomDimensions">
+    <template>
+      <test-element browser-version="123" app-version="456" app-channel="stable"></test-element>
+    </template>
+  </test-fixture>
+
+  <test-fixture id="Request">
+    <template>
+      <test-element page="request"></test-element>
+    </template>
+  </test-fixture>
   <script>
   suite('_loadComponent()', () => {
     let element;
     setup(() => {
-      element = fixture('Basic');
+      element = fixture('Component');
     });
 
     test('Loads a component', () => {
@@ -38,6 +55,17 @@
       })
       .catch((cause) => {
         assert.equal(cause, '../../../components/nothing-here/and-here.html');
+      });
+    });
+
+    test('Uses default location if not set', () => {
+      element.componentsDir = undefined;
+      return element._loadComponent('nothing-here/and-here')
+      .then(() => {
+        throw new Error('Should not resolve');
+      })
+      .catch((cause) => {
+        assert.equal(cause, 'bower_components/nothing-here/and-here.html');
       });
     });
   });
@@ -65,6 +93,717 @@
       assert.isTrue(spy.called);
       assert.equal(spy.args[0][0], 'arc-request-workspace/arc-request-workspace');
       return result.catch(() => {});
+    });
+  });
+
+  suite('_handleNavigation()', () => {
+    let element;
+    setup(() => {
+      element = fixture('Basic');
+    });
+
+    function fire(detail) {
+      const e = new CustomEvent('navigate', {
+        bubbles: true,
+        detail
+      });
+      document.dispatchEvent(e);
+    }
+
+    test('Sets route params for "project"', () => {
+      fire({
+        base: 'project',
+        id: 'test-id'
+      });
+      assert.deepEqual(element.routeParams, {
+        id: 'test-id'
+      });
+      assert.equal(element.page, 'project');
+    });
+
+    test('Sets route params for "request"', () => {
+      fire({
+        base: 'request',
+        id: 'test-id',
+        type: 'saved'
+      });
+      assert.deepEqual(element.routeParams, {
+        id: 'test-id',
+        type: 'saved'
+      });
+      assert.equal(element.page, 'request');
+    });
+
+    test('Sets route params for "api-console"', () => {
+      fire({
+        base: 'api-console',
+        id: 'test-id'
+      });
+      assert.deepEqual(element.routeParams, {
+        id: 'test-id'
+      });
+      assert.equal(element.page, 'api-console');
+    });
+
+    test('Calls _telemetryScreen()', () => {
+      const spy = sinon.spy(element, '_telemetryScreen');
+      fire({
+        base: 'api-console',
+        id: 'test-id'
+      });
+      assert.isTrue(spy.called);
+    });
+
+    test('Throws when route is not handled', () => {
+      assert.throws(() => {
+        element._handleNavigation({
+          detail: {
+            base: ''
+          }
+        });
+      });
+    });
+
+    test('Dispatches exception details', () => {
+      const spy = sinon.spy();
+      element.addEventListener('send-analytics', spy);
+      try {
+        element._handleNavigation({
+          detail: {
+            base: ''
+          }
+        });
+      } catch (_) {}
+      assert.isTrue(spy.called);
+      assert.equal(spy.args[0][0].detail.type, 'exception');
+    });
+  });
+
+  suite('_telemetryScreen()', () => {
+    let element;
+    setup(() => {
+      element = fixture('Basic');
+    });
+    [
+      ['history', 'History'],
+      ['settings', 'Settings'],
+      ['about', 'About'],
+      ['socket', 'Socket'],
+      ['saved', 'Saved'],
+      ['data-import', 'Data import'],
+      ['data-export', 'Data export'],
+      ['project', 'Project details'],
+      ['default', 'Request panel'],
+      ['request', 'Request panel'],
+      ['drive', 'Drive selector'],
+      ['cookie-manager', 'Cookie manager'],
+      ['api-console', 'API Console'],
+      ['rest-projects', 'REST APIs list'],
+      ['exchange-search', 'Exchange search'],
+      ['hosts-rules', 'Hosts rules'],
+      ['themes-panel', 'Themes panel'],
+      ['other', 'other']
+    ].forEach((item) => {
+      test(`Dispatches screenview for ${item[0]} page`, () => {
+        const spy = sinon.spy();
+        element.addEventListener('send-analytics', spy);
+        element.page = item[0];
+        element._telemetryScreen();
+        assert.isTrue(spy.called);
+        assert.equal(spy.args[0][0].detail.type, 'screenview');
+        assert.equal(spy.args[0][0].detail.name, item[1]);
+      });
+    });
+  });
+
+  suite('initSettings()', () => {
+    let element;
+    setup(() => {
+      element = fixture('Basic');
+    });
+
+    let handler;
+    function wrapEvent(cnf) {
+      cnf = cnf || {};
+      handler = function(e) {
+        e.preventDefault();
+        e.detail.result = Promise.resolve(cnf);
+      };
+      window.addEventListener('settings-read', handler);
+    }
+
+    teardown(() => {
+      if (handler) {
+        window.removeEventListener('settings-read', handler);
+      }
+    });
+
+    test('Resolves promise with empty object when event not handled', () => {
+      return element.initSettings()
+      .then((result) => {
+        assert.deepEqual(result, {});
+      });
+    });
+
+    test('Resolves to settings object', () => {
+      wrapEvent({
+        test: true
+      });
+      return element.initSettings()
+      .then((result) => {
+        assert.deepEqual(result, {
+          test: true
+        });
+      });
+    });
+
+    test('Calls _telemetryScreen() when telemetry is set', (done) => {
+      wrapEvent();
+      const spy = sinon.spy(element, '_telemetryScreen');
+      element.initSettings()
+      .then(() => {
+        setTimeout(() => {
+          assert.isTrue(spy.called);
+          done();
+        }, 20);
+      });
+    });
+
+    test('Calls _analyticsEnabled() when telemetry is not set', () => {
+      wrapEvent();
+      const spy = sinon.spy(element, '_analyticsEnabled');
+      return element.initSettings()
+      .then(() => {
+        assert.isTrue(spy.called);
+      });
+    });
+
+    test('Calls _analyticsDisabled() when telemetry is false', () => {
+      wrapEvent({
+        telemetry: false
+      });
+      const spy = sinon.spy(element, '_analyticsDisabled');
+      return element.initSettings()
+      .then(() => {
+        assert.isTrue(spy.called);
+      });
+    });
+
+    test('historyEnabled is true when no corresponding setting', () => {
+      wrapEvent();
+      return element.initSettings()
+      .then(() => {
+        assert.isTrue(element.historyEnabled);
+      });
+    });
+
+    test('historyEnabled is false', () => {
+      wrapEvent({
+        historyEnabled: false
+      });
+      return element.initSettings()
+      .then(() => {
+        assert.isFalse(element.historyEnabled);
+      });
+    });
+  });
+
+  suite('_analyticsEnabled()', () => {
+    let element;
+    setup(() => {
+      element = fixture('CustomDimensions');
+    });
+
+    test('Sets telemetry', () => {
+      element._analyticsEnabled();
+      assert.isTrue(element.telemetry);
+    });
+
+    test('Creates gaCustomDimensions', () => {
+      element._analyticsEnabled();
+      assert.typeOf(element.gaCustomDimensions, 'array');
+      assert.lengthOf(element.gaCustomDimensions, 3);
+    });
+
+    test('Creates CD #1 is set', () => {
+      element._analyticsEnabled();
+      assert.equal(element.gaCustomDimensions[0].index, 1);
+      assert.equal(element.gaCustomDimensions[0].value, '123');
+    });
+
+    test('Creates CD #2 is set', () => {
+      element._analyticsEnabled();
+      assert.equal(element.gaCustomDimensions[1].index, 2);
+      assert.equal(element.gaCustomDimensions[1].value, '456');
+    });
+
+    test('Creates CD #3 is set', () => {
+      element._analyticsEnabled();
+      assert.equal(element.gaCustomDimensions[2].index, 5);
+      assert.equal(element.gaCustomDimensions[2].value, 'stable');
+    });
+
+    test('Won\'t set custom dimmensions when already set', () => {
+      element.gaCustomDimensions = [{}];
+      element._analyticsEnabled();
+      assert.lengthOf(element.gaCustomDimensions, 1);
+    });
+  });
+
+  suite('_analyticsDisabled()', () => {
+    let element;
+    setup(() => {
+      element = fixture('Basic');
+    });
+
+    test('Sets telemetry', () => {
+      element._analyticsDisabled();
+      assert.isFalse(element.telemetry);
+    });
+  });
+
+  suite('_settingChanged()', () => {
+    let element;
+    setup(() => {
+      element = fixture('Basic');
+    });
+
+    test('Sets a configuration', () => {
+      element._settingChanged({
+        detail: {
+          name: 'test',
+          value: 'value'
+        }
+      });
+      assert.equal(element.config.test, 'value');
+    });
+
+    test('Updates configuration', () => {
+      element.config = {
+        test: 'value'
+      };
+      element._settingChanged({
+        detail: {
+          name: 'test',
+          value: 'other'
+        }
+      });
+      assert.equal(element.config.test, 'other');
+    });
+
+    test('Calls _telemetryChanged() for telemetry config', () => {
+      const spy = sinon.spy(element, '_telemetryChanged');
+      element._settingChanged({
+        detail: {
+          name: 'telemetry',
+          value: true
+        }
+      });
+      assert.isTrue(spy.called);
+      assert.isTrue(spy.args[0][0]);
+    });
+
+    test('Sets historyEnabled', () => {
+      element._settingChanged({
+        detail: {
+          name: 'historyEnabled',
+          value: true
+        }
+      });
+      assert.isTrue(element.historyEnabled);
+    });
+  });
+
+  suite('_telemetryChanged()', () => {
+    let element;
+    setup(() => {
+      element = fixture('Basic');
+    });
+
+    test('Calls _analyticsEnabled()', () => {
+      const spy = sinon.spy(element, '_telemetryChanged');
+      element._telemetryChanged(true);
+      assert.isTrue(spy.called);
+    });
+
+    test('Calls _analyticsEnabled() with string argument', () => {
+      const spy = sinon.spy(element, '_telemetryChanged');
+      element._telemetryChanged('true');
+      assert.isTrue(spy.called);
+    });
+
+    test('Calls _analyticsDisabled()', () => {
+      const spy = sinon.spy(element, '_analyticsDisabled');
+      element._telemetryChanged(false);
+      assert.isTrue(spy.called);
+    });
+
+    test('Calls _analyticsDisabled() with string argument', () => {
+      const spy = sinon.spy(element, '_analyticsDisabled');
+      element._telemetryChanged('false');
+      assert.isTrue(spy.called);
+    });
+  });
+
+  suite('saveOpened()', () => {
+    let element;
+    setup(() => {
+      element = fixture('Request');
+    });
+
+    test('Calls saveOpened() on workspace', () => {
+      const spy = sinon.spy(element.workspace, 'saveOpened');
+      const opts = {shortcut: true};
+      element.saveOpened(opts);
+      assert.isTrue(spy.called);
+      assert.deepEqual(spy.args[0][0], opts);
+    });
+
+    test('Ignores calls when not request page', () => {
+      element.page = 'project';
+      const spy = sinon.spy(element.workspace, 'saveOpened');
+      const opts = {shortcut: true};
+      element.saveOpened(opts);
+      assert.isFalse(spy.called);
+    });
+  });
+
+  suite('closeWorkspaceTab()', () => {
+    let element;
+    setup(() => {
+      element = fixture('Request');
+    });
+
+    test('Calls removeRequest() on workspace', () => {
+      const spy = sinon.spy(element.workspace, 'removeRequest');
+      element.closeWorkspaceTab(1);
+      assert.isTrue(spy.called);
+      assert.equal(spy.args[0][0], 1);
+    });
+
+    test('Casts argument to number', () => {
+      const spy = sinon.spy(element.workspace, 'removeRequest');
+      element.closeWorkspaceTab('1');
+      assert.isTrue(spy.called);
+      assert.equal(spy.args[0][0], 1);
+    });
+
+    test('Ignores calls when not request page', () => {
+      element.page = 'project';
+      const spy = sinon.spy(element.workspace, 'removeRequest');
+      element.closeWorkspaceTab(1);
+      assert.isFalse(spy.called);
+    });
+  });
+
+  suite('closeAllWorkspaceTabs()', () => {
+    let element;
+    setup(() => {
+      element = fixture('Request');
+    });
+
+    test('Calls clearWorkspace() on workspace', () => {
+      const spy = sinon.spy(element.workspace, 'clearWorkspace');
+      element.closeAllWorkspaceTabs();
+      assert.isTrue(spy.called);
+    });
+  });
+
+  suite('duplicateWorkspaceTab()', () => {
+    let element;
+    setup(() => {
+      element = fixture('Request');
+    });
+
+    test('Calls duplicateTab() on workspace', () => {
+      const spy = sinon.spy(element.workspace, 'duplicateTab');
+      element.duplicateWorkspaceTab(1);
+      assert.isTrue(spy.called);
+      assert.equal(spy.args[0][0], 1);
+    });
+
+    test('Casts argument to number', () => {
+      const spy = sinon.spy(element.workspace, 'duplicateTab');
+      element.duplicateWorkspaceTab('1');
+      assert.isTrue(spy.called);
+      assert.equal(spy.args[0][0], 1);
+    });
+
+    test('Ignores calls when not request page', () => {
+      element.page = 'project';
+      const spy = sinon.spy(element.workspace, 'duplicateTab');
+      element.duplicateWorkspaceTab(1);
+      assert.isFalse(spy.called);
+    });
+  });
+
+  suite('closeOtherWorkspaceTabs()', () => {
+    let element;
+    setup(() => {
+      element = fixture('Request');
+    });
+
+    test('Calls removeRequest() on workspace for each active tab', () => {
+      const spy = sinon.spy(element.workspace, 'removeRequest');
+      element.closeOtherWorkspaceTabs(2);
+      assert.isTrue(spy.called);
+      assert.equal(spy.callCount, 3);
+    });
+
+    test('Leaves selected request', () => {
+      const spy = sinon.spy(element.workspace, 'removeRequest');
+      element.closeOtherWorkspaceTabs(2);
+      assert.isTrue(spy.called);
+      assert.equal(spy.args[0][0], 3);
+      assert.equal(spy.args[1][0], 1);
+      assert.equal(spy.args[2][0], 0);
+    });
+
+    test('Sets selected on workspace', () => {
+      element.closeOtherWorkspaceTabs(2);
+      assert.equal(element.workspace.selected, 0);
+    });
+  });
+
+  suite('newRequestTab()', () => {
+    let element;
+    setup(() => {
+      element = fixture('Request');
+    });
+
+    test('Calls addEmptyRequest() on workspace', () => {
+      const spy = sinon.spy(element.workspace, 'addEmptyRequest');
+      element.newRequestTab();
+      assert.isTrue(spy.called);
+    });
+
+    test('Ignores calls when not request page', () => {
+      element.page = 'project';
+      const spy = sinon.spy(element.workspace, 'addEmptyRequest');
+      element.newRequestTab();
+      assert.isFalse(spy.called);
+    });
+  });
+
+  suite('sendCurrentTab()', () => {
+    let element;
+    setup(() => {
+      element = fixture('Request');
+    });
+
+    test('Calls addEmptyRequest() on workspace', () => {
+      const spy = sinon.spy(element.workspace, 'sendCurrent');
+      element.sendCurrentTab();
+      assert.isTrue(spy.called);
+    });
+
+    test('Ignores calls when not request page', () => {
+      element.page = 'project';
+      const spy = sinon.spy(element.workspace, 'sendCurrent');
+      element.sendCurrentTab();
+      assert.isFalse(spy.called);
+    });
+  });
+
+  suite('getTabsCount()', () => {
+    let element;
+    setup(() => {
+      element = fixture('Basic');
+    });
+
+    test('Returns size of requests array', () => {
+      const result = element.getTabsCount();
+      assert.equal(result, 4);
+    });
+
+    test('Returns 0 when no workspace', () => {
+      element.$.workspace = undefined;
+      const result = element.getTabsCount();
+      assert.equal(result, 0);
+    });
+
+    test('Returns 0 when no activeRequests', () => {
+      element.workspace.activeRequests = undefined;
+      const result = element.getTabsCount();
+      assert.equal(result, 0);
+    });
+  });
+
+  suite('updateRequestTab()', () => {
+    let element;
+    setup(() => {
+      element = fixture('Basic');
+    });
+
+    test('Calls updateRequestObject() on workspace', () => {
+      const spy = sinon.spy(element.workspace, 'updateRequestObject');
+      const request = {test: true};
+      element.updateRequestTab(request, 1);
+      assert.isTrue(spy.called);
+      assert.deepEqual(spy.args[0][0], request);
+      assert.equal(spy.args[0][1], 1);
+    });
+
+    test('Uses current selection when missing', () => {
+      const spy = sinon.spy(element.workspace, 'updateRequestObject');
+      const request = {test: true};
+      element.workspace.selected = 1;
+      element.updateRequestTab(request);
+      assert.isTrue(spy.called);
+      assert.deepEqual(spy.args[0][0], request);
+      assert.equal(spy.args[0][1], 1);
+    });
+  });
+
+  suite('_dispatchNavigate()', () => {
+    let element;
+    setup(() => {
+      element = fixture('Basic');
+    });
+
+    test('Dispatches navigate event', () => {
+      const spy = sinon.spy();
+      element.addEventListener('navigate', spy);
+      const opts = {base: 'project'};
+      element._dispatchNavigate(opts);
+      assert.isTrue(spy.called);
+    });
+
+    test('Event bubbles', () => {
+      const spy = sinon.spy();
+      element.addEventListener('navigate', spy);
+      const opts = {base: 'project'};
+      element._dispatchNavigate(opts);
+      assert.isTrue(spy.args[0][0].bubbles);
+    });
+
+    test('Event has detail object', () => {
+      const spy = sinon.spy();
+      element.addEventListener('navigate', spy);
+      const opts = {base: 'project'};
+      element._dispatchNavigate(opts);
+      assert.deepEqual(spy.args[0][0].detail, opts);
+    });
+  });
+
+  suite('Navigation events and functions', () => {
+    let element;
+    setup(() => {
+      element = fixture('Basic');
+    });
+    [
+      ['openCookieManager', 'cookie-manager'],
+      ['openExchangeSearch', 'exchange-search'],
+      ['openThemesPanel', 'themes-panel'],
+      ['openAbout', 'about'],
+      ['openDrivePicker', 'drive'],
+      ['openSettings', 'settings'],
+      ['openHostRules', 'hosts-rules'],
+      ['openImport', 'data-import'],
+      ['openExport', 'data-export'],
+      ['openWebSocket', 'socket'],
+      ['openSaved', 'saved'],
+      ['openHistory', 'history']
+    ].forEach((item) => {
+      test(`${item[0]}() calls _dispatchNavigate() with an argument`, () => {
+        const spy = sinon.spy(element, '_dispatchNavigate');
+        element[item[0]]();
+        assert.isTrue(spy.called);
+        assert.deepEqual(spy.args[0][0], {
+          base: item[1]
+        });
+      });
+    });
+
+    test('openWorkspace() sets page', () => {
+      element.openWorkspace();
+      assert.equal(element.page, 'request');
+    });
+  });
+
+  suite('_appVersionRequestHandler()', () => {
+    test('Sets app version on the detail object', () => {
+      fixture('CustomDimensions');
+      const e = new CustomEvent('app-version', {bubbles: true, detail: {}});
+      document.body.dispatchEvent(e);
+      assert.equal(e.detail.version, '456');
+    });
+  });
+
+  suite('_googleOauthTokenRequested()', () => {
+    let element;
+    setup(() => {
+      element = fixture('Basic');
+    });
+
+    test('Calls _requestAuthToken()', () => {
+      const spy = sinon.spy(element, '_requestAuthToken');
+      const e = new CustomEvent('google-autorize', {bubbles: true, detail: {
+        scope: 's1 s2 s3'
+      }});
+      document.body.dispatchEvent(e);
+      assert.isTrue(spy.called);
+    });
+
+    test('Sets function arguments', () => {
+      const spy = sinon.spy(element, '_requestAuthToken');
+      const e = new CustomEvent('google-autorize', {bubbles: true, detail: {
+        scope: 's1 s2 s3'
+      }});
+      document.body.dispatchEvent(e);
+      assert.isTrue(spy.args[0][0]);
+      assert.deepEqual(spy.args[0][1], ['s1', 's2', 's3']);
+    });
+  });
+
+  suite('_ispectImportHandler()', () => {
+    let element;
+    setup((done) => {
+      element = fixture('Component');
+      flush(() => done());
+    });
+
+    function addPanel(element) {
+      const panel = document.createElement('import-panel');
+      element.shadowRoot.appendChild(panel);
+    }
+
+    test('Imports the panel', () => {
+      addPanel(element);
+      return element._ispectImportHandler({detail: {}})
+      .then(() => {
+        const instance = window.customElements.get('import-panel');
+        assert.ok(instance);
+      });
+    });
+
+    test('Calls notifyError() when panel is not in the DOM', () => {
+      const spy = sinon.spy(element, 'notifyError');
+      return element._ispectImportHandler({detail: {}})
+      .then(() => {
+        assert.isTrue(spy.called);
+        assert.equal(spy.args[0][0], 'Import panel not found');
+      });
+    });
+
+    test('Sets data on import panel', () => {
+      addPanel(element);
+      const data = {test: true};
+      return element._ispectImportHandler({detail: {data}})
+      .then(() => {
+        const node = element.shadowRoot.querySelector('import-panel');
+        assert.deepEqual(node.data, data);
+      });
+    });
+
+    test('Sets selectedPage on import panel', () => {
+      addPanel(element);
+      const data = {test: true};
+      return element._ispectImportHandler({detail: {data}})
+      .then(() => {
+        const node = element.shadowRoot.querySelector('import-panel');
+        assert.equal(node.selectedPage, 3);
+      });
     });
   });
   </script>
