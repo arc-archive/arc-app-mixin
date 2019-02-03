@@ -2,8 +2,8 @@ language: node_js
 node_js: 8
 sudo: required
 before_script:
-- npm install -g polymer-cli
-- polymer install --variants
+- npm install -g polymer-cli istanbul wct-istanbub
+- polymer install
 addons:
   firefox: latest
   apt:
@@ -13,15 +13,12 @@ addons:
     - google-chrome-stable
   sauce_connect: true
 script:
-- npm run lint
 - xvfb-run polymer test --plugin local
 - if [ "${TRAVIS_PULL_REQUEST}" = "false" ]; then polymer test --plugin sauce --job-name
   "arc-app-mixin:${TRAVIS_BRANCH}" --build-number=${TRAVIS_BUILD_NUMBER}; fi
 cache:
   directories:
   - node_modules
-after_success:
-- node tasks/ci.js
 env:
   global:
   - secure: m059lYD7Bu6yTeO/JCTfNp69hYHXicxLiUt7b2lmA7EcD9zmnViW0/3Q4bq/4hqJs88v8GDuaI5kKTUyWLmqOsZJYG8G7p1Nf1Remfl2LdEO473/wEIEkuM0QImohuB3bP4XIom2K/q44s3tmnUZi36EyGVTYK9340QDq+5ZN1W6tHz8ptng42Nda4lVzCWcaLID+DBnEAOMVM7qt4vccbSqbY1l4ZRv3PfvgMj+BFUNxHlvrLqNTtzgEADreXwrXGMx4FWEHzCV7jhCJySAbafksYjLrVSpb+VetZgqjX/JG/x5bLhfVWc/5T+xOzjvb3tRhkDsRQmQfrkBJqssz2cAHrketRH1qzf/gF+6NGRjl3DCxTAp9Q2KCqQWm5Pb62YwRXiZQnR7nrPc9G49yT/Z6172O+/h/VTMaNCdokwxonqf52KuRY7E3zcNer2yqY61mE/HwwJBQZc3Qo3E8o0C5gUyOAeBIc5CVVbpvfC6NFS88wKTk2qUgnLaPxZcN4J9UVRrMh+4Gv7w85zpKqnZBNWH3GwDBhE07Pz+aR56mpFNVcLi6Vr7Z2M+b6FpEdOKarH3NbtMUVDn4Dswav1na+DYZ5Hb3X2W1FVmuFCSAOUdzfK/03OW3fUKhBEJQLujmLnBfn6bUPamCUh/cfTWUpsNhKO7nfCaUJh+2K8=
