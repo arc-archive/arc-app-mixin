@@ -8,6 +8,10 @@
  *   arc-app-mixin.html
  */
 
+
+// tslint:disable:variable-name Describing an API that's defined elsewhere.
+// tslint:disable:no-any describes the API as best we are able today
+
 /// <reference path="../polymer/types/lib/utils/mixin.d.ts" />
 
 declare namespace ArcComponents {
@@ -158,13 +162,6 @@ declare namespace ArcComponents {
     disconnectedCallback(): void;
 
     /**
-     * Loads a page component when page changes.
-     *
-     * @param page Current page
-     */
-    _pageChanged(page: String|null): void;
-
-    /**
      * Lazy loads component to the DOM.
      * It builds the component path as a `componentsDir` + bower_components
      * + `path` + .html.
@@ -257,9 +254,16 @@ declare namespace ArcComponents {
     /**
      * Closes all workspace tabs but selected.
      *
-     * @param index Selected tab
+     * @param index Index of a tab to leave in workspace.
      */
     closeOtherWorkspaceTabs(index: Number|null): void;
+
+    /**
+     * Duplicates tab values at a position
+     *
+     * @param index Selected tab
+     */
+    duplicateWorkspaceTab(index: Number|null): void;
 
     /**
      * Returns number of currently opened tabs
@@ -269,6 +273,16 @@ declare namespace ArcComponents {
     getTabsCount(): Number|null;
 
     /**
+     * Opens new tab in the request workspace.
+     */
+    newRequestTab(): void;
+
+    /**
+     * Sends currently opened request.
+     */
+    sendCurrentTab(): void;
+
+    /**
      * Updates a request object in this window for a specific tab.
      *
      * @param request ARC request obejct
@@ -276,7 +290,14 @@ declare namespace ArcComponents {
      * it uses current active tab.
      */
     updateRequestTab(request: object|null, index: Number|null): void;
-    _dispatchNavigate(detail: any): void;
+
+    /**
+     * Dispatches `navigate` event with passed `detail`.
+     *
+     * @param detail The detail object to set on the event.
+     * Each navigate event requires `base` property to be set.
+     */
+    _dispatchNavigate(detail: object|null): void;
 
     /**
      * Navigates to cookie manager
@@ -344,16 +365,6 @@ declare namespace ArcComponents {
     openWorkspace(): void;
 
     /**
-     * Opens new tab in the request workspace.
-     */
-    newRequestTab(): void;
-
-    /**
-     * Sends currently opened request.
-     */
-    sendCurrentTab(): void;
-
-    /**
      * Handles ARC components event for application version.
      */
     _appVersionRequestHandler(e: CustomEvent|null): void;
@@ -380,7 +391,9 @@ declare namespace ArcComponents {
 
     /**
      * Handler for `import-data-inspect`. Opens import panel and adds data to it.
+     *
+     * @returns A promise resolved when the component is loaded. It for tests.
      */
-    _ispectImportHandler(e: CustomEvent|null): void;
+    _ispectImportHandler(e: CustomEvent|null): Promise<any>|null;
   }
 }
