@@ -5,14 +5,14 @@
  *   https://github.com/Polymer/tools/tree/master/packages/gen-typescript-declarations
  *
  * To modify these typings, edit the source file(s):
- *   arc-app-mixin.html
+ *   arc-app-mixin.js
  */
 
 
 // tslint:disable:variable-name Describing an API that's defined elsewhere.
 // tslint:disable:no-any describes the API as best we are able today
 
-/// <reference path="../polymer/types/lib/utils/mixin.d.ts" />
+export {ArcAppMixin};
 
 declare namespace ArcComponents {
 
@@ -163,20 +163,20 @@ declare namespace ArcComponents {
 
     /**
      * Lazy loads component to the DOM.
-     * It builds the component path as a `componentsDir` + bower_components
+     * It builds the component path as a `componentsDir` + node_modules
      * + `path` + .html.
      *
      * **Example**
      *
      * ```javascript
-     * this._loadComponent('api-console/api-console')
+     * this._loadComponent('api-console/api-console', '@api-components')
      * .then(() => {}); // console is now loaded.
      * ```
      *
-     * @param path Component path inside bower location.
-     * @returns [description]
+     * @param path Component path inside node location.
+     * @param scope Component package's scope
      */
-    _loadComponent(path: String|null): any;
+    _loadComponent(path: String|null, scope: String|null): Promise<any>|null;
     _reportComponentLoadingError(url: any): void;
 
     /**
@@ -394,6 +394,8 @@ declare namespace ArcComponents {
      *
      * @returns A promise resolved when the component is loaded. It for tests.
      */
-    _ispectImportHandler(e: CustomEvent|null): Promise<any>|null;
+    _inspectImportHandler(e: CustomEvent|null): Promise<any>|null;
   }
 }
+
+export {ArcAppMixinConstructor};

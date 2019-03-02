@@ -1,4 +1,4 @@
-<!--
+/**
 @license
 Copyright 2018 The Advanced REST client authors <arc@mulesoft.com>
 Licensed under the Apache License, Version 2.0 (the "License"); you may not
@@ -10,17 +10,8 @@ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
 WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 License for the specific language governing permissions and limitations under
 the License.
--->
-<link rel="import" href="../polymer/lib/utils/mixin.html">
-<script>
-(function(global) {
-'use strict';
-if (!global.ArcComponents) {
-  /**
-   * @namespace ArcComponents
-   */
-  global.ArcComponents = {};
-}
+*/
+import {dedupingMixin} from '../../@polymer/polymer/lib/utils/mixin.js';
 /**
  * A set of common functions to be shared between versions of ARC
  * on different platforms.
@@ -37,7 +28,7 @@ if (!global.ArcComponents) {
  * @mixinFunction
  * @memberof ArcComponents
  */
-global.ArcComponents.ArcAppMixin = Polymer.dedupingMixin((base) => {
+export const ArcAppMixin = dedupingMixin((base) => {
   /**
    * @polymer
    * @mixinClass
@@ -166,7 +157,7 @@ global.ArcComponents.ArcAppMixin = Polymer.dedupingMixin((base) => {
       this._settingChanged = this._settingChanged.bind(this);
       this._appVersionRequestHandler = this._appVersionRequestHandler.bind(this);
       this._googleOauthTokenRequested = this._googleOauthTokenRequested.bind(this);
-      this._ispectImportHandler = this._ispectImportHandler.bind(this);
+      this._inspectImportHandler = this._inspectImportHandler.bind(this);
     }
 
     connectedCallback() {
@@ -175,7 +166,7 @@ global.ArcComponents.ArcAppMixin = Polymer.dedupingMixin((base) => {
       window.addEventListener('settings-changed', this._settingChanged);
       window.addEventListener('app-version', this._appVersionRequestHandler);
       window.addEventListener('google-autorize', this._googleOauthTokenRequested);
-      window.addEventListener('import-data-inspect', this._ispectImportHandler);
+      window.addEventListener('import-data-inspect', this._inspectImportHandler);
     }
 
     disconnectedCallback() {
@@ -184,44 +175,50 @@ global.ArcComponents.ArcAppMixin = Polymer.dedupingMixin((base) => {
       window.removeEventListener('settings-changed', this._settingChanged);
       window.removeEventListener('app-version', this._appVersionRequestHandler);
       window.removeEventListener('google-autorize', this._googleOauthTokenRequested);
-      window.removeEventListener('import-data-inspect', this._ispectImportHandler);
+      window.removeEventListener('import-data-inspect', this._inspectImportHandler);
     }
     /**
      * Lazy loads component to the DOM.
-     * It builds the component path as a `componentsDir` + bower_components
+     * It builds the component path as a `componentsDir` + node_modules
      * + `path` + .html.
      *
      * **Example**
      *
      * ```javascript
-     * this._loadComponent('api-console/api-console')
+     * this._loadComponent('api-console/api-console', '@api-components')
      * .then(() => {}); // console is now loaded.
      * ```
      *
-     * @param {String} path Component path inside bower location.
-     * @return {[type]} [description]
+     * @param {String} path Component path inside node location.
+     * @param {?String} scope Component package's scope
+     * @return {Promise}
      */
-    _loadComponent(path) {
-      return new Promise((resolve, reject) => {
-        let componentUrl = '';
-        let dir;
-        if (this.componentsDir) {
-          dir = this.componentsDir;
-          if (dir[dir.length - 1] !== '/') {
-            dir += '/';
-          }
-        } else {
-          dir = 'bower_components/';
+    _loadComponent(path, scope) {
+      let componentUrl = '';
+      let dir;
+      if (this.componentsDir) {
+        dir = this.componentsDir;
+        if (dir[dir.length - 1] !== '/') {
+          dir += '/';
         }
-        componentUrl = `${dir}${path}.html`;
-        this._loadingSources = true;
-        Polymer.importHref(componentUrl, () => {
-          this._loadingSources = false;
-          resolve();
-        }, () => {
-          this._loadingSources = false;
-          reject(componentUrl);
-        }, true);
+      } else {
+        dir = 'node_modules/';
+      }
+      if (scope) {
+        scope += '/';
+      } else {
+        scope = '';
+      }
+      componentUrl = `${dir}${scope}${path}.js`;
+      this._loadingSources = true;
+      return import(componentUrl)
+      .then(() => {
+        this._loadingSources = false;
+      })
+      .catch((cause) => {
+        console.warn(cause);
+        this._loadingSources = false;
+        throw componentUrl;
       });
     }
 
@@ -236,7 +233,7 @@ global.ArcComponents.ArcAppMixin = Polymer.dedupingMixin((base) => {
      */
     _loadWorkspace() {
       const path = 'arc-request-workspace/arc-request-workspace';
-      return this._loadComponent(path);
+      return this._loadComponent(path, '@advanced-rest-client');
     }
     /**
      * Handles navigation event and sets the route data.
@@ -676,9 +673,9 @@ global.ArcComponents.ArcAppMixin = Polymer.dedupingMixin((base) => {
      * @param {CustomEvent} e
      * @return {Promise} A promise resolved when the component is loaded. It for tests.
      */
-    _ispectImportHandler(e) {
+    _inspectImportHandler(e) {
       const {data} = e.detail;
-      return this._loadComponent('import-panel/import-panel')
+      return this._loadComponent('import-panel/import-panel', '@advanced-rest-client')
       .then(() => {
         const node = this.shadowRoot.querySelector('import-panel');
         if (!node) {
@@ -694,6 +691,3 @@ global.ArcComponents.ArcAppMixin = Polymer.dedupingMixin((base) => {
   }
   return ArcAppMixinImpl;
 });
-})(window);
-</script>
-</dom-module>
