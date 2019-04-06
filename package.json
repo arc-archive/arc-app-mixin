@@ -18,7 +18,7 @@
     "The Advanced REST client authors <arc@mulesoft.com>"
   ],
   "devDependencies": {
-    "@advanced-rest-client/import-panel": "^3.0.0-preview.1",
+    "@advanced-rest-client/import-panel": "^3.0.0-preview.2",
     "@polymer/gen-typescript-declarations": "^1.6.1",
     "@polymer/iron-component-page": "^4.0.0",
     "@polymer/iron-test-helpers": "^3.0.0",
@@ -27,7 +27,7 @@
     "@webcomponents/webcomponentsjs": "^2.0.0",
     "chai": "^4.2.0",
     "mocha": "^5.2.0",
-    "sinon": "^7.2.3",
+    "sinon": "^7.3.1",
     "wct-mocha": "^1.0.0"
   },
   "scripts": {
@@ -45,6 +45,6 @@
     "The Advanced REST client authors <arc@mulesoft.com>"
   ],
   "dependencies": {
-    "@polymer/polymer": "^3.0.0"
+    "@polymer/polymer": "^3.2.0"
   }
 }
