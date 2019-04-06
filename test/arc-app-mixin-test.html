@@ -70,7 +70,7 @@
         throw new Error('Should not resolve');
       })
       .catch((cause) => {
-        assert.equal(cause, '../../nothing-here/and-here.js');
+        assert.equal(cause, 'node_modules/nothing-here/and-here.js');
       });
     });
   });
