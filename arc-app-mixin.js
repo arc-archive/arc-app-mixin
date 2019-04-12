@@ -209,6 +209,9 @@ export const ArcAppMixin = dedupingMixin((base) => {
       } else {
         scope = '';
       }
+      if (dir[0] !== '.' && dir[0] !== '/') {
+        dir = '/' + dir;
+      }
       componentUrl = `${dir}${scope}${path}.js`;
       this._loadingSources = true;
       return import(componentUrl)
