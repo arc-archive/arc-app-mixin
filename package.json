@@ -10,7 +10,7 @@
     "url": "git://github.com/advanced-rest-client/arc-app-mixin.git"
   },
   "name": "@advanced-rest-client/arc-app-mixin",
-  "version": "3.0.0-preview.2",
+  "version": "3.0.0-preview.3",
   "license": "Apache-2.0",
   "main": "arc-app-mixin.js",
   "authors": [
