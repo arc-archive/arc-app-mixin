@@ -1,23 +1,19 @@
 {
   "name": "@advanced-rest-client/arc-app-mixin",
   "description": "ARC main application mixing to be shared between different versions of ARC (web, electron, chrome)",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "license": "Apache-2.0",
-  "main": "arc-app-mixin.html",
+  "main": "arc-app-mixin.js",
+  "keywords": [
+    "advanced-rest-client",
+    "settings"
+  ],
   "authors": [
-    "Pawel Psztyc",
+    "Pawel Psztyc"
+  ],
+  "contributors": [
     "The Advanced REST client authors <arc@mulesoft.com>"
   ],
-  "devDependencies": {
-    "@polymer/gen-typescript-declarations": "^1.6.1"
-  },
-  "private": false,
-  "scripts": {
-    "lint": "polymer lint arc-app-mixin.html",
-    "test-sauce": "polymer test --plugin sauce --job-name \"arc-app-mixin:local-test\"",
-    "test": "polymer test --plugin local",
-    "update-types": "gen-typescript-declarations --deleteExisting --outDir ."
-  },
   "repository": {
     "type": "git",
     "url": "git://github.com/advanced-rest-client/arc-app-mixin.git"
@@ -25,5 +21,45 @@
   "bugs": {
     "url": "https://github.com/advanced-rest-client/arc-app-mixin/issues",
     "email": "arc@mulesoft.com"
+  },
+  "devDependencies": {
+    "@advanced-rest-client/date-time": "^3.0.2",
+    "@advanced-rest-client/eslint-config": "^1.1.2",
+    "@advanced-rest-client/import-panel": "^3.0.0",
+    "@advanced-rest-client/prettier-config": "^0.1.0",
+    "@advanced-rest-client/testing-karma-sl": "^1.0.4",
+    "@commitlint/cli": "^8.1.0",
+    "@commitlint/config-conventional": "^7.0.0",
+    "@open-wc/testing": "^2.3.3",
+    "@open-wc/testing-karma": "^3.1.29",
+    "@polymer/gen-typescript-declarations": "^1.6.2",
+    "@polymer/iron-test-helpers": "^3.0.1",
+    "deepmerge": "^4.0.0",
+    "es-dev-server": "^1.17.2",
+    "husky": "^1.0.0",
+    "lint-staged": "^9.2.5",
+    "lit-element": "^2.2.1",
+    "lit-html": "^1.1.2",
+    "sinon": "^7.4.2"
+  },
+  "scripts": {
+    "test": "karma start --coverage",
+    "update-types": "gen-typescript-declarations --deleteExisting --outDir .",
+    "lint:eslint": "eslint --ext .js,.html .",
+    "format:eslint": "eslint --ext .js,.html . --fix",
+    "lint:prettier": "prettier \"**/*.js\" --list-different || (echo '↑↑ these files are not prettier formatted ↑↑' && exit 1)",
+    "format:prettier": "prettier \"**/*.js\" --write",
+    "lint": "npm run lint:eslint && npm run lint:prettier",
+    "format": "npm run format:eslint && npm run format:prettier",
+    "test:watch": "karma start --auto-watch=true --single-run=false",
+    "test:legacy": "karma start --compatibility all --coverage",
+    "test:legacy:watch": "karma start --compatibility all --auto-watch=true --single-run=false",
+    "test:sl": "karma start karma.sl.config.js --compatibility all --coverage"
+  },
+  "lint-staged": {
+    "*.js": [
+      "eslint --fix",
+      "git add"
+    ]
   }
 }
