@@ -9,14 +9,14 @@ Advanced REST Client main application mixin to be shared between different versi
 
 ### Installation
 ```
-npm install --save @advanced-rest-client/request-editor
+npm install --save @advanced-rest-client/arc-app-mixin
 ```
 
 ### In a LitElement
 
 ```javascript
 import { LitElement, html } from 'lit-element';
-import { ArcAppMixin } from  '@advanced-rest-client/request-editor/request-editor.js';
+import { ArcAppMixin } from  '@advanced-rest-client/arc-app-mixin/arc-app-mixin.js';
 
 class SampleElement extends ArcAppMixin(LitElement) {
 }
