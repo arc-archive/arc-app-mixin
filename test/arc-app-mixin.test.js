@@ -1,69 +1,57 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes">
-  <title>arc-app-mixin test</title>
+import { fixture, assert, html, nextFrame, aTimeout } from '@open-wc/testing';
+import * as sinon from 'sinon/pkg/sinon-esm.js';
+import './test-element.js';
 
-  <script src="../../../@webcomponents/webcomponentsjs/webcomponents-loader.js"></script>
-  <script src="../../../@polymer/test-fixture/test-fixture.js"></script>
-  <script src="../../../mocha/mocha.js"></script>
-  <script src="../../../chai/chai.js"></script>
-  <script src="../../../wct-mocha/wct-mocha.js"></script>
-
-</head>
-<body>
-  <test-fixture id="Basic">
-    <template>
+describe('ArcAppMixin', function() {
+  async function basicFixture() {
+    return await fixture(html`
       <test-element></test-element>
-    </template>
-  </test-fixture>
+    `);
+  }
 
-  <test-fixture id="Component">
-    <template>
-      <test-element components-dir="../../../components"></test-element>
-    </template>
-  </test-fixture>
+  async function componentFixture() {
+    return await fixture(html`
+      <test-element componentsdir="./node_modules"></test-element>
+    `);
+  }
 
-  <test-fixture id="CustomDimensions">
-    <template>
-      <test-element browser-version="123" app-version="456" app-channel="stable"></test-element>
-    </template>
-  </test-fixture>
+  async function customDimensionsFixture() {
+    return await fixture(html`
+      <test-element browserversion="123" appversion="456" appchannel="stable"></test-element>
+    `);
+  }
 
-  <test-fixture id="Request">
-    <template>
+  async function requestFixture() {
+    return await fixture(html`
       <test-element page="request"></test-element>
-    </template>
-  </test-fixture>
-  <script type="module">
-  import './test-element.js';
-  import {spy as sinonSpy} from '../../../sinon/pkg/sinon-esm.js';
-  suite('_loadComponent()', () => {
+    `);
+  }
+
+  describe('_loadComponent()', () => {
     let element;
-    setup(() => {
-      element = fixture('Component');
+    beforeEach(async () => {
+      element = await componentFixture();
     });
 
-    test('Loads a component', () => {
-      return element._loadComponent('@polymer/paper-checkbox/paper-checkbox')
+    it('Loads a component', () => {
+      return element._loadComponent('date-time/date-time', '@advanced-rest-client')
       .then(() => {
-        const instance = window.customElements.get('paper-checkbox');
+        const instance = window.customElements.get('date-time');
         assert.ok(instance);
       });
     });
 
-    test('Rejects when component cannot be loaded', () => {
+    it('Rejects when component cannot be loaded', () => {
       return element._loadComponent('nothing-here/and-here')
       .then(() => {
         throw new Error('Should not resolve');
       })
       .catch((cause) => {
-        assert.equal(cause, '../../../components/nothing-here/and-here.js');
+        assert.equal(cause, './node_modules/nothing-here/and-here.js');
       });
     });
 
-    test('Uses default location if not set', () => {
+    it('Uses default location if not set', () => {
       element.componentsDir = undefined;
       return element._loadComponent('nothing-here/and-here')
       .then(() => {
@@ -75,25 +63,25 @@
     });
   });
 
-  suite('_reportComponentLoadingError()', () => {
+  describe('_reportComponentLoadingError()', () => {
     let element;
-    setup(() => {
-      element = fixture('Basic');
+    beforeEach(async () => {
+      element = await basicFixture();
     });
 
-    test('Does nothing', () => {
+    it('Does nothing', () => {
       element._reportComponentLoadingError();
     });
   });
 
-  suite('_loadWorkspace()', () => {
+  describe('_loadWorkspace()', () => {
     let element;
-    setup(() => {
-      element = fixture('Component');
+    beforeEach(async () => {
+      element = await componentFixture();
     });
 
-    test('Calls _loadComponent() with argument', () => {
-      const spy = sinonSpy(element, '_loadComponent');
+    it('Calls _loadComponent() with argument', () => {
+      const spy = sinon.spy(element, '_loadComponent');
       const result = element._loadWorkspace();
       assert.isTrue(spy.called);
       assert.equal(spy.args[0][0], 'arc-request-workspace/arc-request-workspace');
@@ -102,10 +90,10 @@
     });
   });
 
-  suite('_handleNavigation()', () => {
+  describe('_handleNavigation()', () => {
     let element;
-    setup(() => {
-      element = fixture('Basic');
+    beforeEach(async () => {
+      element = await basicFixture();
     });
 
     function fire(detail) {
@@ -116,7 +104,7 @@
       document.dispatchEvent(e);
     }
 
-    test('Sets route params for "project"', () => {
+    it('Sets route params for "project"', () => {
       fire({
         base: 'project',
         id: 'test-id'
@@ -127,7 +115,7 @@
       assert.equal(element.page, 'project');
     });
 
-    test('Sets route params for "request"', () => {
+    it('Sets route params for "request"', () => {
       fire({
         base: 'request',
         id: 'test-id',
@@ -140,7 +128,7 @@
       assert.equal(element.page, 'request');
     });
 
-    test('Sets route params for "api-console"', () => {
+    it('Sets route params for "api-console"', () => {
       fire({
         base: 'api-console',
         id: 'test-id'
@@ -151,8 +139,8 @@
       assert.equal(element.page, 'api-console');
     });
 
-    test('Calls _telemetryScreen()', () => {
-      const spy = sinonSpy(element, '_telemetryScreen');
+    it('Calls _telemetryScreen()', () => {
+      const spy = sinon.spy(element, '_telemetryScreen');
       fire({
         base: 'api-console',
         id: 'test-id'
@@ -160,7 +148,7 @@
       assert.isTrue(spy.called);
     });
 
-    test('Throws when route is not handled', () => {
+    it('Throws when route is not handled', () => {
       assert.throws(() => {
         element._handleNavigation({
           detail: {
@@ -170,8 +158,8 @@
       });
     });
 
-    test('Dispatches exception details', () => {
-      const spy = sinonSpy();
+    it('Dispatches exception details', () => {
+      const spy = sinon.spy();
       element.addEventListener('send-analytics', spy);
       try {
         element._handleNavigation({
@@ -179,16 +167,18 @@
             base: ''
           }
         });
-      } catch (_) {}
+      } catch (_) {
+        // ..
+      }
       assert.isTrue(spy.called);
       assert.equal(spy.args[0][0].detail.type, 'exception');
     });
   });
 
-  suite('_telemetryScreen()', () => {
+  describe('_telemetryScreen()', () => {
     let element;
-    setup(() => {
-      element = fixture('Basic');
+    beforeEach(async () => {
+      element = await basicFixture();
     });
     [
       ['history', 'History'],
@@ -210,8 +200,8 @@
       ['themes-panel', 'Themes panel'],
       ['other', 'other']
     ].forEach((item) => {
-      test(`Dispatches screenview for ${item[0]} page`, () => {
-        const spy = sinonSpy();
+      it(`Dispatches screenview for ${item[0]} page`, () => {
+        const spy = sinon.spy();
         element.addEventListener('send-analytics', spy);
         element.page = item[0];
         element._telemetryScreen();
@@ -222,10 +212,10 @@
     });
   });
 
-  suite('initSettings()', () => {
+  describe('initSettings()', () => {
     let element;
-    setup(() => {
-      element = fixture('Basic');
+    beforeEach(async () => {
+      element = await basicFixture();
     });
 
     let handler;
@@ -238,20 +228,20 @@
       window.addEventListener('settings-read', handler);
     }
 
-    teardown(() => {
+    afterEach(() => {
       if (handler) {
         window.removeEventListener('settings-read', handler);
       }
     });
 
-    test('Resolves promise with empty object when event not handled', () => {
+    it('Resolves promise with empty object when event not handled', () => {
       return element.initSettings()
       .then((result) => {
         assert.deepEqual(result, {});
       });
     });
 
-    test('Resolves to settings object', () => {
+    it('Resolves to settings object', () => {
       wrapEvent({
         test: true
       });
@@ -263,9 +253,9 @@
       });
     });
 
-    test('Calls _telemetryScreen() when telemetry is set', (done) => {
+    it('Calls _telemetryScreen() when telemetry is set', (done) => {
       wrapEvent();
-      const spy = sinonSpy(element, '_telemetryScreen');
+      const spy = sinon.spy(element, '_telemetryScreen');
       element.initSettings()
       .then(() => {
         setTimeout(() => {
@@ -275,27 +265,27 @@
       });
     });
 
-    test('Calls _analyticsEnabled() when telemetry is not set', () => {
+    it('Calls _analyticsEnabled() when telemetry is not set', () => {
       wrapEvent();
-      const spy = sinonSpy(element, '_analyticsEnabled');
+      const spy = sinon.spy(element, '_analyticsEnabled');
       return element.initSettings()
       .then(() => {
         assert.isTrue(spy.called);
       });
     });
 
-    test('Calls _analyticsDisabled() when telemetry is false', () => {
+    it('Calls _analyticsDisabled() when telemetry is false', () => {
       wrapEvent({
         telemetry: false
       });
-      const spy = sinonSpy(element, '_analyticsDisabled');
+      const spy = sinon.spy(element, '_analyticsDisabled');
       return element.initSettings()
       .then(() => {
         assert.isTrue(spy.called);
       });
     });
 
-    test('historyEnabled is true when no corresponding setting', () => {
+    it('historyEnabled is true when no corresponding setting', () => {
       wrapEvent();
       return element.initSettings()
       .then(() => {
@@ -303,7 +293,7 @@
       });
     });
 
-    test('historyEnabled is false', () => {
+    it('historyEnabled is false', () => {
       wrapEvent({
         historyEnabled: false
       });
@@ -314,67 +304,67 @@
     });
   });
 
-  suite('_analyticsEnabled()', () => {
+  describe('_analyticsEnabled()', () => {
     let element;
-    setup(() => {
-      element = fixture('CustomDimensions');
+    beforeEach(async () => {
+      element = await customDimensionsFixture();
     });
 
-    test('Sets telemetry', () => {
+    it('Sets telemetry', () => {
       element._analyticsEnabled();
       assert.isTrue(element.telemetry);
     });
 
-    test('Creates gaCustomDimensions', () => {
+    it('Creates gaCustomDimensions', () => {
       element._analyticsEnabled();
       assert.typeOf(element.gaCustomDimensions, 'array');
       assert.lengthOf(element.gaCustomDimensions, 3);
     });
 
-    test('Creates CD #1 is set', () => {
+    it('Creates CD #1 is set', () => {
       element._analyticsEnabled();
       assert.equal(element.gaCustomDimensions[0].index, 1);
       assert.equal(element.gaCustomDimensions[0].value, '123');
     });
 
-    test('Creates CD #2 is set', () => {
+    it('Creates CD #2 is set', () => {
       element._analyticsEnabled();
       assert.equal(element.gaCustomDimensions[1].index, 2);
       assert.equal(element.gaCustomDimensions[1].value, '456');
     });
 
-    test('Creates CD #3 is set', () => {
+    it('Creates CD #3 is set', () => {
       element._analyticsEnabled();
       assert.equal(element.gaCustomDimensions[2].index, 5);
       assert.equal(element.gaCustomDimensions[2].value, 'stable');
     });
 
-    test('Won\'t set custom dimmensions when already set', () => {
+    it('Won\'t set custom dimmensions when already set', () => {
       element.gaCustomDimensions = [{}];
       element._analyticsEnabled();
       assert.lengthOf(element.gaCustomDimensions, 1);
     });
   });
 
-  suite('_analyticsDisabled()', () => {
+  describe('_analyticsDisabled()', () => {
     let element;
-    setup(() => {
-      element = fixture('Basic');
+    beforeEach(async () => {
+      element = await basicFixture();
     });
 
-    test('Sets telemetry', () => {
+    it('Sets telemetry', () => {
       element._analyticsDisabled();
       assert.isFalse(element.telemetry);
     });
   });
 
-  suite('_settingChanged()', () => {
+  describe('_settingChanged()', () => {
     let element;
-    setup(() => {
-      element = fixture('Basic');
+    beforeEach(async () => {
+      element = await basicFixture();
     });
 
-    test('Sets a configuration', () => {
+    it('Sets a configuration', () => {
       element._settingChanged({
         detail: {
           name: 'test',
@@ -384,7 +374,7 @@
       assert.equal(element.config.test, 'value');
     });
 
-    test('Updates configuration', () => {
+    it('Updates configuration', () => {
       element.config = {
         test: 'value'
       };
@@ -397,8 +387,8 @@
       assert.equal(element.config.test, 'other');
     });
 
-    test('Calls _telemetryChanged() for telemetry config', () => {
-      const spy = sinonSpy(element, '_telemetryChanged');
+    it('Calls _telemetryChanged() for telemetry config', () => {
+      const spy = sinon.spy(element, '_telemetryChanged');
       element._settingChanged({
         detail: {
           name: 'telemetry',
@@ -409,7 +399,7 @@
       assert.isTrue(spy.args[0][0]);
     });
 
-    test('Sets historyEnabled', () => {
+    it('Sets historyEnabled', () => {
       element._settingChanged({
         detail: {
           name: 'historyEnabled',
@@ -420,144 +410,144 @@
     });
   });
 
-  suite('_telemetryChanged()', () => {
+  describe('_telemetryChanged()', () => {
     let element;
-    setup(() => {
-      element = fixture('Basic');
+    beforeEach(async () => {
+      element = await basicFixture();
     });
 
-    test('Calls _analyticsEnabled()', () => {
-      const spy = sinonSpy(element, '_telemetryChanged');
+    it('Calls _analyticsEnabled()', () => {
+      const spy = sinon.spy(element, '_telemetryChanged');
       element._telemetryChanged(true);
       assert.isTrue(spy.called);
     });
 
-    test('Calls _analyticsEnabled() with string argument', () => {
-      const spy = sinonSpy(element, '_telemetryChanged');
+    it('Calls _analyticsEnabled() with string argument', () => {
+      const spy = sinon.spy(element, '_telemetryChanged');
       element._telemetryChanged('true');
       assert.isTrue(spy.called);
     });
 
-    test('Calls _analyticsDisabled()', () => {
-      const spy = sinonSpy(element, '_analyticsDisabled');
+    it('Calls _analyticsDisabled()', () => {
+      const spy = sinon.spy(element, '_analyticsDisabled');
       element._telemetryChanged(false);
       assert.isTrue(spy.called);
     });
 
-    test('Calls _analyticsDisabled() with string argument', () => {
-      const spy = sinonSpy(element, '_analyticsDisabled');
+    it('Calls _analyticsDisabled() with string argument', () => {
+      const spy = sinon.spy(element, '_analyticsDisabled');
       element._telemetryChanged('false');
       assert.isTrue(spy.called);
     });
   });
 
-  suite('saveOpened()', () => {
+  describe('saveOpened()', () => {
     let element;
-    setup(() => {
-      element = fixture('Request');
+    beforeEach(async () => {
+      element = await requestFixture();
     });
 
-    test('Calls saveOpened() on workspace', () => {
-      const spy = sinonSpy(element.workspace, 'saveOpened');
-      const opts = {shortcut: true};
+    it('Calls saveOpened() on workspace', () => {
+      const spy = sinon.spy(element.workspace, 'saveOpened');
+      const opts = { shortcut: true };
       element.saveOpened(opts);
       assert.isTrue(spy.called);
       assert.deepEqual(spy.args[0][0], opts);
     });
 
-    test('Ignores calls when not request page', () => {
+    it('Ignores calls when not request page', () => {
       element.page = 'project';
-      const spy = sinonSpy(element.workspace, 'saveOpened');
-      const opts = {shortcut: true};
+      const spy = sinon.spy(element.workspace, 'saveOpened');
+      const opts = { shortcut: true };
       element.saveOpened(opts);
       assert.isFalse(spy.called);
     });
   });
 
-  suite('closeWorkspaceTab()', () => {
+  describe('closeWorkspaceTab()', () => {
     let element;
-    setup(() => {
-      element = fixture('Request');
+    beforeEach(async () => {
+      element = await requestFixture();
     });
 
-    test('Calls removeRequest() on workspace', () => {
-      const spy = sinonSpy(element.workspace, 'removeRequest');
+    it('Calls removeRequest() on workspace', () => {
+      const spy = sinon.spy(element.workspace, 'removeRequest');
       element.closeWorkspaceTab(1);
       assert.isTrue(spy.called);
       assert.equal(spy.args[0][0], 1);
     });
 
-    test('Casts argument to number', () => {
-      const spy = sinonSpy(element.workspace, 'removeRequest');
+    it('Casts argument to number', () => {
+      const spy = sinon.spy(element.workspace, 'removeRequest');
       element.closeWorkspaceTab('1');
       assert.isTrue(spy.called);
       assert.equal(spy.args[0][0], 1);
     });
 
-    test('Ignores calls when not request page', () => {
+    it('Ignores calls when not request page', () => {
       element.page = 'project';
-      const spy = sinonSpy(element.workspace, 'removeRequest');
+      const spy = sinon.spy(element.workspace, 'removeRequest');
       element.closeWorkspaceTab(1);
       assert.isFalse(spy.called);
     });
   });
 
-  suite('closeAllWorkspaceTabs()', () => {
+  describe('closeAllWorkspaceTabs()', () => {
     let element;
-    setup(() => {
-      element = fixture('Request');
+    beforeEach(async () => {
+      element = await requestFixture();
     });
 
-    test('Calls clearWorkspace() on workspace', () => {
-      const spy = sinonSpy(element.workspace, 'clearWorkspace');
+    it('Calls clearWorkspace() on workspace', () => {
+      const spy = sinon.spy(element.workspace, 'clearWorkspace');
       element.closeAllWorkspaceTabs();
       assert.isTrue(spy.called);
     });
   });
 
-  suite('duplicateWorkspaceTab()', () => {
+  describe('duplicateWorkspaceTab()', () => {
     let element;
-    setup(() => {
-      element = fixture('Request');
+    beforeEach(async () => {
+      element = await requestFixture();
     });
 
-    test('Calls duplicateTab() on workspace', () => {
-      const spy = sinonSpy(element.workspace, 'duplicateTab');
+    it('Calls duplicateTab() on workspace', () => {
+      const spy = sinon.spy(element.workspace, 'duplicateTab');
       element.duplicateWorkspaceTab(1);
       assert.isTrue(spy.called);
       assert.equal(spy.args[0][0], 1);
     });
 
-    test('Casts argument to number', () => {
-      const spy = sinonSpy(element.workspace, 'duplicateTab');
+    it('Casts argument to number', () => {
+      const spy = sinon.spy(element.workspace, 'duplicateTab');
       element.duplicateWorkspaceTab('1');
       assert.isTrue(spy.called);
       assert.equal(spy.args[0][0], 1);
     });
 
-    test('Ignores calls when not request page', () => {
+    it('Ignores calls when not request page', () => {
       element.page = 'project';
-      const spy = sinonSpy(element.workspace, 'duplicateTab');
+      const spy = sinon.spy(element.workspace, 'duplicateTab');
       element.duplicateWorkspaceTab(1);
       assert.isFalse(spy.called);
     });
   });
 
-  suite('closeOtherWorkspaceTabs()', () => {
+  describe('closeOtherWorkspaceTabs()', () => {
     let element;
-    setup(() => {
-      element = fixture('Request');
+    beforeEach(async () => {
+      element = await requestFixture();
     });
 
-    test('Calls removeRequest() on workspace for each active tab', () => {
-      const spy = sinonSpy(element.workspace, 'removeRequest');
+    it('Calls removeRequest() on workspace for each active tab', () => {
+      const spy = sinon.spy(element.workspace, 'removeRequest');
       element.closeOtherWorkspaceTabs(2);
       assert.isTrue(spy.called);
       assert.equal(spy.callCount, 3);
     });
 
-    test('Leaves selected request', () => {
-      const spy = sinonSpy(element.workspace, 'removeRequest');
+    it('Leaves selected request', () => {
+      const spy = sinon.spy(element.workspace, 'removeRequest');
       element.closeOtherWorkspaceTabs(2);
       assert.isTrue(spy.called);
       assert.equal(spy.args[0][0], 3);
@@ -565,94 +555,94 @@
       assert.equal(spy.args[2][0], 0);
     });
 
-    test('Sets selected on workspace', () => {
+    it('Sets selected on workspace', () => {
       element.closeOtherWorkspaceTabs(2);
       assert.equal(element.workspace.selected, 0);
     });
   });
 
-  suite('newRequestTab()', () => {
+  describe('newRequestTab()', () => {
     let element;
-    setup(() => {
-      element = fixture('Request');
+    beforeEach(async () => {
+      element = await requestFixture();
     });
 
-    test('Calls addEmptyRequest() on workspace', () => {
-      const spy = sinonSpy(element.workspace, 'addEmptyRequest');
+    it('Calls addEmptyRequest() on workspace', () => {
+      const spy = sinon.spy(element.workspace, 'addEmptyRequest');
       element.newRequestTab();
       assert.isTrue(spy.called);
     });
 
-    test('Ignores calls when not request page', () => {
+    it('Ignores calls when not request page', () => {
       element.page = 'project';
-      const spy = sinonSpy(element.workspace, 'addEmptyRequest');
+      const spy = sinon.spy(element.workspace, 'addEmptyRequest');
       element.newRequestTab();
       assert.isFalse(spy.called);
     });
   });
 
-  suite('sendCurrentTab()', () => {
+  describe('sendCurrentTab()', () => {
     let element;
-    setup(() => {
-      element = fixture('Request');
+    beforeEach(async () => {
+      element = await requestFixture();
     });
 
-    test('Calls addEmptyRequest() on workspace', () => {
-      const spy = sinonSpy(element.workspace, 'sendCurrent');
+    it('Calls addEmptyRequest() on workspace', () => {
+      const spy = sinon.spy(element.workspace, 'sendCurrent');
       element.sendCurrentTab();
       assert.isTrue(spy.called);
     });
 
-    test('Ignores calls when not request page', () => {
+    it('Ignores calls when not request page', () => {
       element.page = 'project';
-      const spy = sinonSpy(element.workspace, 'sendCurrent');
+      const spy = sinon.spy(element.workspace, 'sendCurrent');
       element.sendCurrentTab();
       assert.isFalse(spy.called);
     });
   });
 
-  suite('getTabsCount()', () => {
+  describe('getTabsCount()', () => {
     let element;
-    setup(() => {
-      element = fixture('Basic');
+    beforeEach(async () => {
+      element = await basicFixture();
     });
 
-    test('Returns size of requests array', () => {
+    it('Returns size of requests array', () => {
       const result = element.getTabsCount();
       assert.equal(result, 4);
     });
 
-    test('Returns 0 when no workspace', () => {
-      element.$.workspace = undefined;
+    it('Returns 0 when no workspace', () => {
+      element.workspace.activeRequests = undefined;
       const result = element.getTabsCount();
       assert.equal(result, 0);
     });
 
-    test('Returns 0 when no activeRequests', () => {
+    it('Returns 0 when no activeRequests', () => {
       element.workspace.activeRequests = undefined;
       const result = element.getTabsCount();
       assert.equal(result, 0);
     });
   });
 
-  suite('updateRequestTab()', () => {
+  describe('updateRequestTab()', () => {
     let element;
-    setup(() => {
-      element = fixture('Basic');
+    beforeEach(async () => {
+      element = await basicFixture();
     });
 
-    test('Calls updateRequestObject() on workspace', () => {
-      const spy = sinonSpy(element.workspace, 'updateRequestObject');
-      const request = {test: true};
+    it('Calls updateRequestObject() on workspace', () => {
+      const spy = sinon.spy(element.workspace, 'updateRequestObject');
+      const request = { test: true };
       element.updateRequestTab(request, 1);
       assert.isTrue(spy.called);
       assert.deepEqual(spy.args[0][0], request);
       assert.equal(spy.args[0][1], 1);
     });
 
-    test('Uses current selection when missing', () => {
-      const spy = sinonSpy(element.workspace, 'updateRequestObject');
-      const request = {test: true};
+    it('Uses current selection when missing', () => {
+      const spy = sinon.spy(element.workspace, 'updateRequestObject');
+      const request = { test: true };
       element.workspace.selected = 1;
       element.updateRequestTab(request);
       assert.isTrue(spy.called);
@@ -661,41 +651,41 @@
     });
   });
 
-  suite('_dispatchNavigate()', () => {
+  describe('_dispatchNavigate()', () => {
     let element;
-    setup(() => {
-      element = fixture('Basic');
+    beforeEach(async () => {
+      element = await basicFixture();
     });
 
-    test('Dispatches navigate event', () => {
-      const spy = sinonSpy();
+    it('Dispatches navigate event', () => {
+      const spy = sinon.spy();
       element.addEventListener('navigate', spy);
-      const opts = {base: 'project'};
+      const opts = { base: 'project' };
       element._dispatchNavigate(opts);
       assert.isTrue(spy.called);
     });
 
-    test('Event bubbles', () => {
-      const spy = sinonSpy();
+    it('Event bubbles', () => {
+      const spy = sinon.spy();
       element.addEventListener('navigate', spy);
-      const opts = {base: 'project'};
+      const opts = { base: 'project' };
       element._dispatchNavigate(opts);
       assert.isTrue(spy.args[0][0].bubbles);
     });
 
-    test('Event has detail object', () => {
-      const spy = sinonSpy();
+    it('Event has detail object', () => {
+      const spy = sinon.spy();
       element.addEventListener('navigate', spy);
-      const opts = {base: 'project'};
+      const opts = { base: 'project' };
       element._dispatchNavigate(opts);
       assert.deepEqual(spy.args[0][0].detail, opts);
     });
   });
 
-  suite('Navigation events and functions', () => {
+  describe('Navigation events and functions', () => {
     let element;
-    setup(() => {
-      element = fixture('Basic');
+    beforeEach(async () => {
+      element = await basicFixture();
     });
     [
       ['openCookieManager', 'cookie-manager'],
@@ -711,8 +701,8 @@
       ['openSaved', 'saved'],
       ['openHistory', 'history']
     ].forEach((item) => {
-      test(`${item[0]}() calls _dispatchNavigate() with an argument`, () => {
-        const spy = sinonSpy(element, '_dispatchNavigate');
+      it(`${item[0]}() calls _dispatchNavigate() with an argument`, () => {
+        const spy = sinon.spy(element, '_dispatchNavigate');
         element[item[0]]();
         assert.isTrue(spy.called);
         assert.deepEqual(spy.args[0][0], {
@@ -721,52 +711,51 @@
       });
     });
 
-    test('openWorkspace() sets page', () => {
+    it('openWorkspace() sets page', () => {
       element.openWorkspace();
       assert.equal(element.page, 'request');
     });
   });
 
-  suite('_appVersionRequestHandler()', () => {
-    test('Sets app version on the detail object', () => {
-      fixture('CustomDimensions');
-      const e = new CustomEvent('app-version', {bubbles: true, detail: {}});
+  describe('_appVersionRequestHandler()', () => {
+    it('Sets app version on the detail object', async () => {
+      await customDimensionsFixture();
+      const e = new CustomEvent('app-version', { bubbles: true, detail: {} });
       document.body.dispatchEvent(e);
       assert.equal(e.detail.version, '456');
     });
   });
 
-  suite('_googleOauthTokenRequested()', () => {
+  describe('_googleOauthTokenRequested()', () => {
     let element;
-    setup(() => {
-      element = fixture('Basic');
+    beforeEach(async () => {
+      element = await basicFixture();
     });
 
-    test('Calls _requestAuthToken()', () => {
-      const spy = sinonSpy(element, '_requestAuthToken');
-      const e = new CustomEvent('google-autorize', {bubbles: true, detail: {
+    it('Calls _requestAuthToken()', () => {
+      const spy = sinon.spy(element, '_requestAuthToken');
+      const e = new CustomEvent('google-autorize', { bubbles: true, detail: {
         scope: 's1 s2 s3'
-      }});
+      } });
       document.body.dispatchEvent(e);
       assert.isTrue(spy.called);
     });
 
-    test('Sets function arguments', () => {
-      const spy = sinonSpy(element, '_requestAuthToken');
-      const e = new CustomEvent('google-autorize', {bubbles: true, detail: {
+    it('Sets function arguments', () => {
+      const spy = sinon.spy(element, '_requestAuthToken');
+      const e = new CustomEvent('google-autorize', { bubbles: true, detail: {
         scope: 's1 s2 s3'
-      }});
+      } });
       document.body.dispatchEvent(e);
       assert.isTrue(spy.args[0][0]);
       assert.deepEqual(spy.args[0][1], ['s1', 's2', 's3']);
     });
   });
 
-  suite('_inspectImportHandler()', () => {
+  describe('_inspectImportHandler()', () => {
     let element;
-    setup((done) => {
-      element = fixture('Component');
-      flush(() => done());
+    beforeEach(async () => {
+      element = await componentFixture();
     });
 
     function addPanel(element) {
@@ -774,44 +763,42 @@
       element.shadowRoot.appendChild(panel);
     }
 
-    test('Calls notifyError() when panel is not in the DOM', () => {
-      const spy = sinonSpy(element, 'notifyError');
-      return element._inspectImportHandler({detail: {}})
+    it('Calls notifyError() when panel is not in the DOM', () => {
+      const spy = sinon.spy(element, 'notifyError');
+      return element._inspectImportHandler({ detail: {} })
       .then(() => {
         assert.isTrue(spy.called);
         assert.equal(spy.args[0][0], 'Import panel not found');
       });
     });
 
-    test('Imports the panel', () => {
+    it('Imports the panel', () => {
       addPanel(element);
-      return element._inspectImportHandler({detail: {}})
+      return element._inspectImportHandler({ detail: {} })
       .then(() => {
         const instance = window.customElements.get('import-panel');
         assert.ok(instance);
       });
     });
 
-    test('Sets data on import panel', () => {
+    it('Sets data on import panel', () => {
       addPanel(element);
-      const data = {test: true};
-      return element._inspectImportHandler({detail: {data}})
+      const data = { test: true };
+      return element._inspectImportHandler({ detail: { data } })
       .then(() => {
         const node = element.shadowRoot.querySelector('import-panel');
         assert.deepEqual(node.data, data);
       });
     });
 
-    test('Sets selectedPage on import panel', () => {
+    it('Sets selectedPage on import panel', () => {
       addPanel(element);
-      const data = {test: true};
-      return element._inspectImportHandler({detail: {data}})
+      const data = { test: true };
+      return element._inspectImportHandler({ detail: { data } })
       .then(() => {
         const node = element.shadowRoot.querySelector('import-panel');
         assert.equal(node.selectedPage, 3);
       });
     });
   });
-  </script>
-</body>
-</html>
+});
