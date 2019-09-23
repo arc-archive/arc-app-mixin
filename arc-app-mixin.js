@@ -11,6 +11,42 @@ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 License for the specific language governing permissions and limitations under
 the License.
 */
+import { html } from 'lit-element/lit-element.js';
+import { menu, arrowBack, infoOutline, fileDownload } from '@advanced-rest-client/arc-icons/ArcIcons.js';
+import '@advanced-rest-client/arc-models/project-model.js';
+import '@advanced-rest-client/arc-models/rest-api-model.js';
+import '@advanced-rest-client/arc-models/host-rules-model.js';
+import '@advanced-rest-client/arc-models/request-model.js';
+import '@advanced-rest-client/arc-models/auth-data-model.js';
+import '@advanced-rest-client/arc-models/url-history-model.js';
+import '@advanced-rest-client/arc-models/websocket-url-history-model.js';
+import '@advanced-rest-client/arc-models/variables-model.js';
+import '@advanced-rest-client/arc-models/url-indexer.js';
+import '@advanced-rest-client/arc-data-export/arc-data-export.js';
+import '@advanced-rest-client/arc-data-import/arc-data-import.js';
+import '@advanced-rest-client/oauth-authorization/oauth1-authorization.js';
+import '@advanced-rest-client/request-hooks-logic/request-hooks-logic.js';
+import '@advanced-rest-client/arc-request-logic/arc-request-logic.js';
+import '@advanced-rest-client/response-history-saver/response-history-saver.js';
+import '@advanced-rest-client/variables-manager/variables-manager.js';
+import '@advanced-rest-client/variables-evaluator/variables-evaluator.js';
+import '@advanced-rest-client/arc-messages-service/arc-messages-service.js';
+import '@advanced-rest-client/app-analytics/app-analytics.js';
+import '@advanced-rest-client/app-analytics/app-analytics-custom.js';
+import '@advanced-rest-client/authorization-data-saver/authorization-data-saver.js';
+import '@advanced-rest-client/environment-selector/environment-selector.js';
+import '@advanced-rest-client/arc-request-workspace/arc-request-workspace.js';
+import '@advanced-rest-client/arc-menu/arc-menu.js';
+import '@anypoint-web-components/anypoint-button/anypoint-icon-button.js'
+import '@anypoint-web-components/anypoint-menu-button/anypoint-menu-button.js'
+import '@anypoint-web-components/anypoint-listbox/anypoint-listbox.js'
+import '@anypoint-web-components/anypoint-item/anypoint-item.js'
+import '@anypoint-web-components/anypoint-dropdown-menu/anypoint-dropdown-menu.js'
+async function aTimout(timeout) {
+  return new Promise((resolve) => {
+    setTimeout(() => resolve(), timeout);
+  });
+}
 /**
  * A set of common functions to be shared between versions of ARC
  * on different platforms.
@@ -29,8 +65,101 @@ the License.
  * @return {Class}
  */
 export const ArcAppMixin = (base) => class extends base {
+  get appMenuDisabled() {
+    const { menuConfig } = this;
+    if (!menuConfig) {
+      return false;
+    }
+    if (menuConfig.menuDisabled) {
+      return true;
+    }
+    if (menuConfig.hideHistory && menuConfig.hideSaved && menuConfig.hideProjects && menuConfig.hideApis) {
+      return true;
+    }
+    return false;
+  }
+
+  get renderBackButton() {
+    const { page } = this;
+    return !page || page !== 'request';
+  }
+
+  get _oauth2redirectUri() {
+    const config = this.config || {};
+    return config.oauth2redirectUri || 'https://auth.advancedrestclient.com/oauth-popup.html';
+  }
+
+  get page() {
+    return this._page;
+  }
+
+  set page(value) {
+    const old = this._page;
+    /* istanbul ignore if */
+    if (old === value) {
+      return;
+    }
+    this._page = value;
+    this.requestUpdate('page', old);
+    this._pageChanged(value);
+    this._routeDataChanged();
+  }
+
+  get routeParams() {
+    return this._routeParams;
+  }
+
+  set routeParams(value) {
+    const old = this._routeParams;
+    /* istanbul ignore if */
+    if (old === value) {
+      return;
+    }
+    this.requestUpdate('routeParams', old);
+    this._routeParams = value;
+    this._routeDataChanged();
+  }
+
+  get _variablesOverlayOpened() {
+    return this.__variablesOverlayOpened;
+  }
+
+  set _variablesOverlayOpened(value) {
+    const old = this.__variablesOverlayOpened;
+    /* istanbul ignore if */
+    if (old === value) {
+      return;
+    }
+    this.requestUpdate('_variablesOverlayOpened', old);
+    this.__variablesOverlayOpened = value;
+    this._varsOverlayChanged(value);
+  }
+
+  get requestModel() {
+    if (!this.__rmodel) {
+      this.__rmodel = this.shadowRoot.querySelector('request-model');
+    }
+    return this.__rmodel;
+  }
+
   static get properties() {
     return {
+      /**
+       * Automatically set via media queries.
+       * When set it renders narrow wiew.
+       * This also affects API console.
+       */
+      narrow: { type: Boolean },
+      /**
+       * Set by API console wrapper. WHen set the API is being processed.
+       */
+      apiProcessing: { type: Boolean },
+      apiSelected: { type: String },
+      apiSelectedType: { type: String },
+      /**
+       * Received from layout elements narrow state.
+       */
+      narrowLayout: { type: Boolean, reflect: true },
       /**
        * A base path to the web componentes. It is used to determine
        * components location when including parts of the application.
@@ -127,12 +256,25 @@ export const ArcAppMixin = (base) => class extends base {
        * - hideProjects
        * - hideApis
        */
-      menuConfig: { type: Object }
+      menuConfig: { type: Object },
+      /**
+       * A reference to the variables open button.
+       * @type {String}
+       */
+      _variablesButton: { type: Object },
+      /**
+       * Enables compatibility with Anypoint platform
+       */
+      compatibility: { type: Boolean },
+      /**
+       * Enables material's outlined theme for inputs.
+       */
+      outlined: { type: Boolean },
     };
   }
 
   get workspace() {
-    return this.shadowRoot.querySelector('workspace');
+    return this.shadowRoot.querySelector('#workspace');
   }
 
   constructor() {
@@ -142,6 +284,11 @@ export const ArcAppMixin = (base) => class extends base {
     this._appVersionRequestHandler = this._appVersionRequestHandler.bind(this);
     this._googleOauthTokenRequested = this._googleOauthTokenRequested.bind(this);
     this._inspectImportHandler = this._inspectImportHandler.bind(this);
+    this._apiDataHandler = this._apiDataHandler.bind(this);
+    this._processErrorHandler = this._processErrorHandler.bind(this);
+    this._processStartHandler = this._processStartHandler.bind(this);
+    this._processStopHandler = this._processStopHandler.bind(this);
+    this.openWorkspace = this.openWorkspace.bind(this);
     this.log = console;
     this.browserVersion = '';
     this.appChannel = 'stable';
@@ -157,6 +304,12 @@ export const ArcAppMixin = (base) => class extends base {
     window.addEventListener('app-version', this._appVersionRequestHandler);
     window.addEventListener('google-autorize', this._googleOauthTokenRequested);
     window.addEventListener('import-data-inspect', this._inspectImportHandler);
+    window.addEventListener('api-data-ready', this._apiDataHandler);
+    window.addEventListener('process-error', this._processErrorHandler);
+    window.addEventListener('process-loading-start', this._processStartHandler);
+    window.addEventListener('process-loading-stop', this._processStopHandler);
+    this.addEventListener('request-workspace-append', this.openWorkspace);
+    window.addEventListener('workspace-open-project-requests', this.openWorkspace);
   }
 
   disconnectedCallback() {
@@ -166,6 +319,18 @@ export const ArcAppMixin = (base) => class extends base {
     window.removeEventListener('app-version', this._appVersionRequestHandler);
     window.removeEventListener('google-autorize', this._googleOauthTokenRequested);
     window.removeEventListener('import-data-inspect', this._inspectImportHandler);
+    window.removeEventListener('api-data-ready', this._apiDataHandler);
+    window.removeEventListener('process-error', this._processErrorHandler);
+    window.removeEventListener('process-loading-start', this._processStartHandler);
+    window.removeEventListener('process-loading-stop', this._processStopHandler);
+    this.removeEventListener('request-workspace-append', this.openWorkspace);
+    window.removeEventListener('workspace-open-project-requests', this.openWorkspace);
+  }
+
+  firstUpdated() {
+    if (this.page === 'request') {
+      this._setupRequest(this.routeParams);
+    }
   }
   /**
    * Lazy loads component to the DOM.
@@ -668,16 +833,852 @@ export const ArcAppMixin = (base) => class extends base {
     const { data } = e.detail;
     try {
       await this._loadComponent('import-panel/import-panel', '@advanced-rest-client');
+      await aTimout();
       const node = this.shadowRoot.querySelector('import-panel');
-      if (!node) {
-        this.notifyError('Import panel not found');
-        return;
-      }
       node.data = data;
       node.selectedPage = 3;
       this.openImport();
     } catch (e) {
       this.notifyError(e.message);
+    }
+  }
+
+  _computeVarDisabled(enabled) {
+    if (enabled === undefined) {
+      return false;
+    }
+    return !enabled;
+  }
+
+  /**
+   * Sets `newMessages` propert depending if messaging service detected
+   * new messages.
+   *
+   * @param {CustomEvent} e
+   */
+  _unreadMessagesChanged(e) {
+    const state = !!(e.detail.value && e.detail.value.length > 0);
+    this.newMessages = state;
+  }
+
+  _appMessagesHandler(e) {
+    this.appMessages = e.detail.value;
+  }
+
+  /**
+   * Returns true when both types of variables are disabled.
+   * @param {Boolean} sysVars
+   * @param {Boolean} appVars
+   * @return {Boolean}
+   */
+  _computeVariablesDisabled(sysVars, appVars) {
+    if (sysVars === undefined) {
+      sysVars = true;
+    }
+    if (appVars === undefined) {
+      appVars = true;
+    }
+    return !(sysVars && appVars);
+  }
+
+  _routeDataChanged() {
+    const { page, routeParams } = this;
+    switch (page) {
+      case 'request':
+        this._setupRequest(routeParams);
+        break;
+    }
+  }
+
+  /**
+   * Loads a page component when page changes.
+   * @param {String} page Current page
+   * @return {Promise}
+   */
+  async _pageChanged(page) {
+    let id;
+    let path;
+    let scope;
+    history.pushState({ page }, null, '#' + page);
+    switch (page) {
+      case 'request':
+        id = 'arc-request-workspace';
+        path = 'arc-request-workspace/arc-request-workspace';
+        scope = '@advanced-rest-client';
+        break;
+      case 'project':
+        id = 'project-details';
+        path = 'project-details/project-details';
+        scope = '@advanced-rest-client';
+        break;
+      case 'cookie-manager':
+        id = 'cookie-manager';
+        path = 'cookie-manager/cookie-manager';
+        scope = '@advanced-rest-client';
+        break;
+      case 'settings':
+        id = 'arc-settings-panel';
+        path = 'arc-settings-panel/arc-settings-panel';
+        scope = '@advanced-rest-client';
+        break;
+      case 'socket':
+        id = 'websocket-panel';
+        path = 'websocket-panel/websocket-panel';
+        scope = '@advanced-rest-client';
+        break;
+      case 'drive':
+        id = 'google-drive-browser';
+        path = 'google-drive-browser/google-drive-browser';
+        scope = '@advanced-rest-client';
+        break;
+      case 'data-import':
+        id = 'import-panel';
+        path = 'import-panel/import-panel';
+        scope = '@advanced-rest-client';
+        break;
+      case 'data-export':
+        id = 'export-panel';
+        path = 'export-panel/export-panel';
+        scope = '@advanced-rest-client';
+        break;
+      case 'history':
+        id = 'history-panel';
+        path = 'history-panel/history-panel';
+        scope = '@advanced-rest-client';
+        break;
+      case 'saved':
+        id = 'saved-requests-panel';
+        path = 'saved-requests-panel/saved-requests-panel';
+        scope = '@advanced-rest-client';
+        break;
+      default:
+        this.log.error(`The base route ${page} is not recognized`);
+        return;
+    }
+    const cls = window.customElements.get(id);
+    if (cls) {
+      return;
+    }
+    try {
+      await this._loadComponent(path, scope)
+    } catch (cmp) {
+      this._reportComponentLoadingError(cmp);
+    }
+  }
+
+  initApplication() {
+    setTimeout(() => this.initSettings({}));
+    setTimeout(() => this._requestAuthToken(false));
+    const hash = location.hash.substr(1);
+    if (hash) {
+      this.page = hash;
+    }
+  }
+
+  async _setupRequest(params) {
+    if (!params) {
+      return;
+    }
+    const { id, type } = params;
+    if (!type || !this.workspace.addEmptyRequest) {
+      this.log.info('arc-app-mixin::_setupRequest::Missing use case implementation?');
+      return;
+    }
+    if (!type || type === 'new') {
+      this.workspace.addEmptyRequest();
+      return;
+    }
+    if (params.type === 'latest' || !params.id) {
+      return;
+    }
+    const model = this.requestModel;
+    if (!model) {
+      this.log.warn('Request model not ready.');
+      return;
+    }
+    try {
+      const request = await model.read(type, id);
+      const workspace = this.workspace;
+      const index = workspace.findRequestIndex(request._id);
+      if (index === -1) {
+        workspace.appendRequest(request);
+      } else {
+        workspace.updateRequestObject(request, index);
+        workspace.selected = index;
+      }
+    } catch (cause) {
+      this.log.warn('Restoring request:', cause);
+    }
+  }
+
+
+  /**
+   * Loads `web-url-input` component and runs it to ask the user for the URL
+   * to open in session window. Cookies recorded in the window are becomming
+   * requests session cookies.
+   */
+  openWebUrl() {
+    if (this.page !== 'request') {
+      this.page = 'request';
+    }
+    this.workspace.openWebUrlInput();
+  }
+  /**
+   * The overlay is not included by default in the view so it loads the
+   * component first and then renders it. Subsequent opens do not require
+   * inluding the comonent.
+   *
+   * @param {Boolean} val
+   */
+  async _varsOverlayChanged(val) {
+    if (val && !window.customElements.get('variables-preview-overlay')) {
+      try {
+        await this._loadComponent('variables-preview-overlay/variables-preview-overlay', '@advanced-rest-client');
+      } catch (cmp) {
+        this._reportComponentLoadingError(cmp);
+      }
+    }
+  }
+
+  async _variablesOpenRequest(e) {
+    e.stopPropagation();
+    this._variablesOverlayOpened = false;
+    try {
+      await this._loadComponent('variables-drawer-editor/variables-drawer-editor', '@advanced-rest-client');
+      const node = this.shadowRoot.querySelector('#environmentsDrawer');
+      node.opened = true;
+    } catch(e) {
+      this._reportComponentLoadingError(e);
+    }
+  }
+
+  _variablesPreviewClosed() {
+    if (this._variablesOverlayOpened) {
+      this._variablesOverlayOpened = false;
+    }
+  }
+
+  _infoMessagesHandler(e) {
+    if (e.detail.value) {
+      this.openInfoCenter();
+    } else {
+      this.messageCenterOpened = false;
+    }
+  }
+
+  /**
+   * Opens the info center drawwer.
+   */
+  openInfoCenter() {
+    const timeout = this._messagesReadTimeout || 4000;
+    this.messageCenterOpened = !this.messageCenterOpened;
+    if (this.messageCenterOpened) {
+      const node = this.shadowRoot.querySelector('#msgService');
+      node.readMessages();
+      setTimeout(() => node.makrkAllRead(), timeout);
+    }
+  }
+  /**
+   * Closes the info center drawwer.
+   */
+  closeInfoCenter() {
+    this.messageCenterOpened = false;
+  }
+
+  async _apiDataHandler(e) {
+    const { model, type } = e.detail;
+    await this._setApiData(model, type.type);
+    this._dispatchNavigate({
+      base: 'api-console'
+    });
+  }
+
+  /**
+   * Handles opening a file from Google Drive.
+   * Dispatches `import-process-file` so the import module processes the data
+   *
+   * @param {CustomEvent} e
+   */
+  _openDriveRequest(e) {
+    const file = new Blob([e.detail.content], { type: 'application/json' });
+    this.dispatchEvent(new CustomEvent('import-process-file', {
+      bubbles: true,
+      composed: true,
+      cancelable: true,
+      detail: {
+        file,
+        diveId: e.detail.diveId
+      }
+    }));
+  }
+  /**
+   * Handler for `process-loading-start` custom event.
+   * Renders toast with message.
+   * @param {CustomEvent} e
+   */
+  _processStartHandler(e) {
+    const { id, message, indeterminate } = e.detail;
+    if (!id) {
+      this.log.warn('Invalid use of `process-loading-start` event');
+      return;
+    }
+    const toast = document.createElement('paper-toast');
+    toast.dataset.processId = id;
+    if (indeterminate) {
+      toast.duration = 0;
+    }
+    const container = document.createElement('div');
+    container.style.display = 'flex';
+    container.style.flexDirection = 'row';
+    container.style.alignItems = 'center';
+    const label = document.createElement('span');
+    label.innerText = message;
+    label.style.flex = 1;
+    label.style.flexBasis = '0.000000001px';
+    container.appendChild(label);
+    const spinner = document.createElement('paper-spinner');
+    spinner.active = true;
+    container.appendChild(spinner);
+    toast.appendChild(container);
+    document.body.appendChild(toast);
+    toast.opened = true;
+  }
+  /**
+   * Handler for `process-loading-stop` custom event.
+   * Removes previously set toast
+   * @param {CustomEvent} e
+   */
+  _processStopHandler(e) {
+    const { id } = e.detail;
+    if (!id) {
+      this.log.warn('Invalid use of `process-loading-stop` event');
+      return;
+    }
+    const node = document.body.querySelector(`[data-process-id="${id}"]`);
+    if (!node) {
+      return;
+    }
+    node.addEventListener('iron-overlay-closed', function f() {
+      node.removeEventListener('iron-overlay-closed', f);
+      try {
+        node.parentNode.removeChild(node);
+      } catch (_) {
+        // ...
+      }
+    });
+    node.opened = false;
+  }
+  /**
+   * Handler for `process-error` custom event.
+   * Removes previously set progress toasts and adds new with error.
+   * @param {CustomEvent} e
+   */
+  _processErrorHandler(e) {
+    const nodes = document.body.querySelectorAll(`paper-toast[data-process-id]`);
+    for (let i = nodes.length - 1; i >= 0; i--) {
+      nodes[i].opened = false;
+      try {
+        nodes[i].parentNode.removeChild(nodes[i]);
+      } catch (_) {
+        // ...
+      }
+    }
+    this.notifyError(e.detail.message);
+  }
+  /**
+   * Opens license dialog.
+   */
+  async openLicense() {
+    try {
+      await this._loadComponent('arc-license-dialog/arc-license-dialog', '@advanced-rest-client');
+      const node = this.shadowRoot.querySelector('arc-license-dialog');
+      node.opened = true;
+    } catch (cmp) {
+      this._reportComponentLoadingError(cmp);
+    }
+  }
+
+  /**
+   * Handler for the "back" icon click in main navigation.
+   */
+  _backHandler() {
+    this.openWorkspace();
+  }
+  /**
+   * Opens workspace details dialog.
+   */
+  openWorkspaceDetails() {
+    if (this.page !== 'request') {
+      this.page = 'request';
+    }
+    this.workspace.openWorkspaceDetails();
+  }
+
+  /**
+   * Closes active tab in the workspace
+   */
+  closeActiveTab() {
+    this.workspace.closeActiveTab();
+  }
+
+  modelsTemplate() {
+    return html`<auth-data-model></auth-data-model>
+    <project-model></project-model>
+    <rest-api-model></rest-api-model>
+    <host-rules-model></host-rules-model>
+    <url-history-model></url-history-model>
+    <request-model id="requestModel"></request-model>
+    <authorization-data-saver></authorization-data-saver>
+    <websocket-url-history-model></websocket-url-history-model>
+    <variables-model></variables-model>
+    <url-indexer></url-indexer>`;
+  }
+
+  importExportTemplate(opts) {
+    const {
+      outlined,
+      compatibility,
+      appVersion
+    } = this;
+    return html`
+    <arc-data-export
+      .appVersion="${appVersion}"
+      ?compatibility="${compatibility}"
+      ?outlined="${outlined}"
+      ?electroncookies="${opts.electron}"
+    ></arc-data-export>
+    <arc-data-import
+      ?compatibility="${compatibility}"
+      ?outlined="${outlined}"
+    ></arc-data-import>`;
+  }
+
+
+  requestLogicTemplate() {
+    const {
+      historyEnabled
+    } = this;
+    const config = this.config || {};
+    const varsDisabled = this._computeVariablesDisabled(config.systemVariablesEnabled, config.appVariablesEnabled);
+    return html`
+    <oauth1-authorization></oauth1-authorization>
+    <arc-request-logic
+      ?variablesdisabled="${varsDisabled}"
+      jexlpath="Jexl"
+    ></arc-request-logic>
+    <request-hooks-logic></request-hooks-logic>
+    ${historyEnabled ? html`<response-history-saver></response-history-saver>` : ''}
+    `;
+  }
+
+  variablesLogicTemplate() {
+    const config = this.config || {};
+    const { sysVars } = this;
+    return html`
+    <variables-manager
+      ?systemvariables="${sysVars}"
+      ?sysvariablesdisabled="${this._computeVarDisabled(config.systemVariablesEnabled)}"
+      ?appvariablesdisabled="${this._computeVarDisabled(config.appVariablesEnabled)}"></variables-manager>
+    <variables-evaluator
+      nobeforerequest
+      jexlpath="Jexl"
+    ></variables-evaluator>`;
+  }
+
+  appMessagesLogicTemplate(platform) {
+    return html`<arc-messages-service
+      platform="${platform}"
+      @unread-changed="${this._unreadMessagesChanged}"
+      @messages-changed="${this._appMessagesHandler}"
+      id="msgService"
+    ></arc-messages-service>`;
+  }
+
+  menuTemplate() {
+    const {
+      popupMenuExperimentEnabled,
+      historyEnabled,
+      compatibility
+    } = this;
+    const config = this.config || {};
+    const menuConfig = this.menuConfig || {};
+    return html`<arc-menu
+      restapi
+      ?compatibility="${compatibility}"
+      ?draggableenabled="${config.draggableEnabled}"
+      ?allowpopup="${popupMenuExperimentEnabled}"
+      .listType="${config.viewListType}"
+      ?historyenabled="${historyEnabled}"
+      ?hidehistory="${menuConfig.hideHistory}"
+      ?hidesaved="${menuConfig.hideSaved}"
+      ?hideprojects="${menuConfig.hideProjects}"
+      ?hideapis="${menuConfig.hideApis}"
+      @popup-menu="${this._popupMenuHandler}"
+    ></arc-menu>`;
+  }
+
+  _appToolbarToggleTemplate() {
+    const {
+      compatibility,
+      appMenuDisabled
+    } = this;
+    return html`<anypoint-icon-button
+      drawer-toggle
+      title="Toggle application menu"
+      ?hidden="${appMenuDisabled}"
+      ?compatibility="${compatibility}"
+      aria-label="Activate to toggle application menu"
+    >
+      <span class="icon">${menu}</span>
+    </anypoint-icon-button>`;
+  }
+
+  _appToolbarBackButtonTemplate() {
+    const {
+      compatibility,
+      renderBackButton
+    } = this;
+    if (!renderBackButton) {
+      return '';
+    }
+    return html`<anypoint-icon-button
+      class="app-back"
+      @click="${this._backHandler}"
+      title="Go back to main screen"
+      ?compatibility="${compatibility}"
+      aria-label="Activate to go to the main screen"
+    >
+      <span class="icon">${arrowBack}</span>
+    </anypoint-icon-button>`;
+  }
+
+  _appToolbarMessagesButtonTemplate() {
+    const {
+      compatibility,
+      newMessages,
+      messageCenterOpened
+    } = this;
+    if (!newMessages) {
+      return '';
+    }
+    return html`<anypoint-icon-button
+      class="nav-notification-button"
+      ?compatibility="${compatibility}"
+      toggles
+      .active="${messageCenterOpened}"
+      title="See what's new in the app"
+      aria-label="Activate to open application messages"
+      @active-changed="${this._infoMessagesHandler}"
+    >
+      <span class="icon">${infoOutline}</span>
+    </anypoint-icon-button>`;
+  }
+
+  _appToolbarUpdateButtonTemplate() {
+    const {
+      compatibility,
+      hasAppUpdate
+    } = this;
+    if (!hasAppUpdate) {
+      return '';
+    }
+    return html`<anypoint-icon-button
+      ?compatibility="${compatibility}"
+      class="nav-notification-button"
+      @click="${this.updateInstall}"
+      title="Restart and install update"
+    >
+      <span class="icon">${fileDownload}</span>
+    </anypoint-icon-button>`;
+  }
+
+  _varsOverlayHandler(e) {
+    this._variablesOverlayOpened = e.detail.value;
+  }
+
+  _appToolbarEnvTemplate() {
+    const {
+      compatibility,
+      outlined,
+      _variablesOverlayOpened,
+      _variablesButton
+    } = this;
+    return html`
+    <div class="env-container">
+      <span class="env-label">Environment:</span>
+      <environment-selector
+        nolabelfloat
+        ?compatibility="${compatibility}"
+        ?outlined="${outlined}"></environment-selector>
+      <anypoint-icon-button
+        class="var-info-button"
+        id="varToggleButton"
+        title="Open variables list"
+        .active="${_variablesOverlayOpened}"
+        @active-changed="${this._varsOverlayHandler}"
+        toggles
+        ?compatibility="${compatibility}"
+        aria-label="Activate to open variables list"
+      >
+        <span class="icon">${infoOutline}</span>
+      </anypoint-icon-button>
+      <variables-preview-overlay
+        class="var-panel"
+        .positionTarget="${_variablesButton}"
+        dynamicalign
+        horizontalalign="auto"
+        verticalalign="auto"
+        verticaloffset="44"
+        @open-variables-editor="${this._variablesOpenRequest}"
+        @overlay-closed="${this._variablesPreviewClosed}"
+        .opened="${_variablesOverlayOpened}"
+        maskedvalues
+        ?compatibility="${compatibility}"
+      ></variables-preview-overlay>
+    </div>
+    `;
+  }
+
+  mainToolbarTemplate() {
+    return html`
+    ${this._appToolbarToggleTemplate()}
+    ${this._appToolbarBackButtonTemplate()}
+    <div main-title></div>
+    ${this._appToolbarMessagesButtonTemplate()}
+    ${this._appToolbarUpdateButtonTemplate()}
+    ${this._appToolbarEnvTemplate()}`;
+  }
+
+  _trackerTemplate(tid) {
+    const {
+      appId,
+      appVersion
+    } = this;
+    const cm = this.gaCustomMetrics || [];
+    const cd = this.gaCustomDimensions || [];
+    return html`
+    <app-analytics
+      trackingid="${tid}"
+      appname="ARC-electon"
+      appid="${appId}"
+      appversion="${appVersion}"
+      datasource="electron-app"
+    >
+      ${cm.map((item) => html`
+        <app-analytics-custom type="metric" .index="${item.index}" .value="${item.value}"></app-analytics-custom>
+      `)}
+      ${cd.map((item) => html`
+        <app-analytics-custom type="dimension" .index="${item.index}" .value="${item.value}"></app-analytics-custom>
+      `)}
+    </app-analytics>`;
+  }
+
+  _analyticsTemplate() {
+    if (!this.telemetry) {
+      return '';
+    }
+    return html`
+    ${this._trackerTemplate('UA-18021184-6')}
+    ${this._trackerTemplate('UA-18021184-14')}
+    ${this._trackerTemplate('UA-71458341-1')}`;
+  }
+
+  licenseTemplate() {
+    const {
+      compatibility
+    } = this;
+    return html`<arc-license-dialog
+      ?compatibility="${compatibility}"
+    ></arc-license-dialog>`;
+  }
+
+  variablesDrawerTemplate() {
+    const {
+      compatibility,
+      outlined
+    } = this;
+    return html`<variables-drawer-editor
+      id="environmentsDrawer"
+      withbackdrop
+      ?compatibility="${compatibility}"
+      ?outlined="${outlined}"
+    ></variables-drawer-editor>`;
+  }
+
+  workspaceTemplate() {
+    const {
+      _oauth2redirectUri,
+      narrow,
+      compatibility,
+      outlined
+    } = this;
+    const config = this.config || {};
+    return html`<arc-request-workspace
+      data-route="request"
+      id="workspace"
+      ?draggableenabled="${config.draggableEnabled}"
+      oauth2redirecturi="${_oauth2redirectUri}"
+      ?ignorecontentonget="${config.ignoreContentOnGet}"
+      ?narrow="${narrow}"
+      @open-web-url="${this._openWebUrlHandler}"
+      ?compatibility="${compatibility}"
+      ?outlined="${outlined}"
+    ></arc-request-workspace>`;
+  }
+
+  websocketTemplate() {
+    const {
+      compatibility,
+      outlined
+    } = this;
+    return html`
+      <websocket-panel
+        ?compatibility="${compatibility}"
+        ?outlined="${outlined}"
+      ></websocket-panel>
+    `;
+  }
+
+  requestHistoryTemplate() {
+    const {
+      compatibility,
+      outlined
+    } = this;
+    const config = this.config || {};
+    return html`
+      <history-panel
+      .listType="${config.viewListType}"
+      ?draggableenabled="${config.draggableEnabled}"
+      ?compatibility="${compatibility}"
+      ?outlined="${outlined}"
+    ></history-panel>
+    `;
+  }
+
+  requestSavedTemplate() {
+    const {
+      compatibility,
+      outlined
+    } = this;
+    const config = this.config || {};
+    return html`
+      <saved-requests-panel
+      .listType="${config.viewListType}"
+      ?draggableenabled="${config.draggableEnabled}"
+      ?compatibility="${compatibility}"
+      ?outlined="${outlined}"
+    ></saved-requests-panel>
+    `;
+  }
+
+  importViewTemplate() {
+    const {
+      compatibility,
+      outlined
+    } = this;
+    return html`
+    <import-panel
+      .accessToken="${this.driveAccessToken}"
+      ?compatibility="${compatibility}"
+      ?outlined="${outlined}"
+    ></import-panel>
+    `;
+  }
+
+  exportViewTemplate() {
+    const {
+      compatibility,
+      outlined
+    } = this;
+    return html`
+    <export-panel
+      ?compatibility="${compatibility}"
+      ?outlined="${outlined}"
+    ></export-panel>
+    `;
+  }
+
+  settingsViewTemplate(opts) {
+    const {
+      compatibility,
+      outlined
+    } = this;
+    return html`
+    <arc-settings-panel
+      ?compatibility="${compatibility}"
+      ?outlined="${outlined}"
+      ?restApis="${opts.restApis}"
+      ?systemVariablesDisabled="${opts.systemVariablesDisabled}"
+      ?hasExperiments="${opts.hasExperiments}"
+    ></arc-settings-panel>
+    `;
+  }
+
+  projectDetailsViewTemplate() {
+    const {
+      compatibility,
+      outlined
+    } = this;
+    const config = this.config || {};
+    return html`<project-details
+      id="projectDetails"
+      ?draggableenabled="${config.draggableEnabled}"
+      .projectId="${this.routeParams.id}"
+      ?compatibility="${compatibility}"
+      ?outlined="${outlined}"
+    ></project-details>`;
+  }
+
+  gdriveViewTemplate() {
+    const {
+      compatibility,
+      outlined
+    } = this;
+    return html`<google-drive-browser
+      .accessToken="${this.driveAccessToken}"
+      @drive-file-picker-data="${this._openDriveRequest}"
+      ?compatibility="${compatibility}"
+      ?outlined="${outlined}"
+    ></google-drive-browser>`;
+  }
+
+  cookiesViewTemplate() {
+    const {
+      compatibility,
+      outlined
+    } = this;
+    return html`<cookie-manager
+      ?compatibility="${compatibility}"
+      ?outlined="${outlined}"
+    ></cookie-manager>`;
+  }
+
+  restApisViewTemplate(opts) {
+    const {
+      compatibility,
+      outlined
+    } = this;
+    return html`<rest-apis-list-panel
+      ?renderexplore="${opts.sexplore}"
+      ?compatibility="${compatibility}"
+      ?outlined="${outlined}"
+    ></rest-apis-list-panel>`;
+  }
+
+  _pageTemplate() {
+    const {
+      page
+    } = this;
+    switch (page) {
+      case 'socket': return this.websocketTemplate();
+      case 'history': return this.requestHistoryTemplate();
+      case 'saved': return this.requestSavedTemplate();
+      case 'data-import': return this.importViewTemplate();
+      case 'data-export': return this.exportViewTemplate();
+      case 'project': return this.projectDetailsViewTemplate();
+      case 'drive': return this.gdriveViewTemplate();
+      case 'cookie-manager': return this.cookiesViewTemplate();
+      default: return '';
     }
   }
 }

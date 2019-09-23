@@ -14,22 +14,43 @@ class TestElement extends ArcAppMixin(LitElement) {
   }
 
   render() {
-    return html`<app-workspace id="workspace"></app-workspace>`;
+    return html`
+    ${this.modelsTemplate()}
+    ${this.importExportTemplate({ electron: true })}
+    ${this.requestLogicTemplate()}
+    ${this.variablesLogicTemplate()}
+    ${this.appMessagesLogicTemplate('electron')}
+    ${this.menuTemplate()}
+    ${this.mainToolbarTemplate()}
+    ${this._pageTemplate()}
+    ${this.variablesDrawerTemplate()}
+    ${this._analyticsTemplate()}
+    ${this.licenseTemplate()}
+    ${this.settingsViewTemplate({})}
+    ${this.restApisViewTemplate({})}
+    <arc-info-messages></arc-info-messages>
+    <arc-request-workspace id="workspace"></arc-request-workspace>
+    `;
   }
 
   get workspace() {
     if (!this._workspace) {
       this._workspace = {
+        localName: 'arc-request-workspace',
         saveOpened: noop,
         removeRequest: noop,
         clearWorkspace: noop,
         activeRequests: [{ _id: 1 }, { _id: 2 }, { _id: 3 }, { _id: 4 }],
-        addEmptyRequest: noop,
+        addEmptyRequest: () => { this._workspace.activeRequests.push({ _id: 5 }) },
         selected: 0,
         sendCurrent: noop,
         duplicateTab: noop,
-        updateRequestObject: noop,
-        updateRequestTab: noop
+        updateRequestObject: (r, i) => this._workspace.activeRequests[i] = r,
+        updateRequestTab: noop,
+        findRequestIndex: (id) => this._workspace.activeRequests.findIndex((item) => item._id === id),
+        appendRequest: (r) => this._workspace.activeRequests.push(r),
+        openWorkspaceDetails: noop,
+        closeActiveTab: noop
       };
     }
     return this._workspace;

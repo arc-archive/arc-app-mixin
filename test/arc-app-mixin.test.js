@@ -1,5 +1,7 @@
 import { fixture, assert, html, nextFrame, aTimeout } from '@open-wc/testing';
 import * as sinon from 'sinon/pkg/sinon-esm.js';
+import * as MockInteractions from '@polymer/iron-test-helpers/mock-interactions.js';
+import { DataGenerator } from '@advanced-rest-client/arc-data-generator/arc-data-generator.js';
 import './test-element.js';
 
 describe('ArcAppMixin', function() {
@@ -93,7 +95,7 @@ describe('ArcAppMixin', function() {
   describe('_handleNavigation()', () => {
     let element;
     beforeEach(async () => {
-      element = await basicFixture();
+      element = await componentFixture();
     });
 
     function fire(detail) {
@@ -128,22 +130,12 @@ describe('ArcAppMixin', function() {
       assert.equal(element.page, 'request');
     });
 
-    it('Sets route params for "api-console"', () => {
-      fire({
-        base: 'api-console',
-        id: 'test-id'
-      });
-      assert.deepEqual(element.routeParams, {
-        id: 'test-id'
-      });
-      assert.equal(element.page, 'api-console');
-    });
-
     it('Calls _telemetryScreen()', () => {
       const spy = sinon.spy(element, '_telemetryScreen');
       fire({
-        base: 'api-console',
-        id: 'test-id'
+        base: 'request',
+        id: 'test-id',
+        type: 'saved'
       });
       assert.isTrue(spy.called);
     });
@@ -178,26 +170,26 @@ describe('ArcAppMixin', function() {
   describe('_telemetryScreen()', () => {
     let element;
     beforeEach(async () => {
-      element = await basicFixture();
+      element = await componentFixture();
     });
     [
       ['history', 'History'],
       ['settings', 'Settings'],
-      ['about', 'About'],
+      // ['about', 'About'],
       ['socket', 'Socket'],
       ['saved', 'Saved'],
       ['data-import', 'Data import'],
       ['data-export', 'Data export'],
       ['project', 'Project details'],
-      ['default', 'Request panel'],
       ['request', 'Request panel'],
+      ['default', 'Request panel'],
       ['drive', 'Drive selector'],
       ['cookie-manager', 'Cookie manager'],
-      ['api-console', 'API Console'],
-      ['rest-projects', 'REST APIs list'],
-      ['exchange-search', 'Exchange search'],
-      ['hosts-rules', 'Hosts rules'],
-      ['themes-panel', 'Themes panel'],
+      // ['api-console', 'API Console'],
+      // ['rest-projects', 'REST APIs list'],
+      // ['exchange-search', 'Exchange search'],
+      // ['hosts-rules', 'Hosts rules'],
+      // ['themes-panel', 'Themes panel'],
       ['other', 'other']
     ].forEach((item) => {
       it(`Dispatches screenview for ${item[0]} page`, () => {
@@ -756,49 +748,391 @@ describe('ArcAppMixin', function() {
     let element;
     beforeEach(async () => {
       element = await componentFixture();
+      element.page = 'data-import';
+      await nextFrame();
     });
 
-    function addPanel(element) {
-      const panel = document.createElement('import-panel');
-      element.shadowRoot.appendChild(panel);
-    }
-
-    it('Calls notifyError() when panel is not in the DOM', () => {
-      const spy = sinon.spy(element, 'notifyError');
-      return element._inspectImportHandler({ detail: {} })
-      .then(() => {
-        assert.isTrue(spy.called);
-        assert.equal(spy.args[0][0], 'Import panel not found');
-      });
+    it('Imports the panel', async () => {
+      await element._inspectImportHandler({ detail: {} });
+      const instance = window.customElements.get('import-panel');
+      assert.ok(instance);
     });
 
-    it('Imports the panel', () => {
-      addPanel(element);
-      return element._inspectImportHandler({ detail: {} })
-      .then(() => {
-        const instance = window.customElements.get('import-panel');
-        assert.ok(instance);
-      });
-    });
-
-    it('Sets data on import panel', () => {
-      addPanel(element);
+    it('Sets data on import panel', async () => {
       const data = { test: true };
-      return element._inspectImportHandler({ detail: { data } })
-      .then(() => {
-        const node = element.shadowRoot.querySelector('import-panel');
-        assert.deepEqual(node.data, data);
-      });
+      await element._inspectImportHandler({ detail: { data } });
+      const node = element.shadowRoot.querySelector('import-panel');
+      assert.deepEqual(node.data, data);
     });
 
-    it('Sets selectedPage on import panel', () => {
-      addPanel(element);
+    it('Sets selectedPage on import panel', async () => {
       const data = { test: true };
-      return element._inspectImportHandler({ detail: { data } })
-      .then(() => {
-        const node = element.shadowRoot.querySelector('import-panel');
-        assert.equal(node.selectedPage, 3);
+      await element._inspectImportHandler({ detail: { data } });
+      const node = element.shadowRoot.querySelector('import-panel');
+      assert.equal(node.selectedPage, 3);
+    });
+  });
+
+  describe('#appMenuDisabled', () => {
+    let element;
+    beforeEach(async () => {
+      element = await basicFixture();
+    });
+
+    it('returns false when no config', () => {
+      assert.isFalse(element.appMenuDisabled);
+    });
+
+    it('returns true when menu disabled in config', () => {
+      element.menuConfig = {
+        menuDisabled: true
+      };
+      assert.isTrue(element.appMenuDisabled);
+    });
+
+    it('returns true when all menus are disabled', () => {
+      element.menuConfig = {
+        menuDisabled: false,
+        hideHistory: true,
+        hideSaved: true,
+        hideProjects: true,
+        hideApis: true
+      };
+      assert.isTrue(element.appMenuDisabled);
+    });
+
+    it('returns false when some menu is visible', () => {
+      element.menuConfig = {
+        menuDisabled: false,
+        hideHistory: true,
+        hideSaved: true,
+        hideProjects: true,
+        hideApis: false
+      };
+      assert.isFalse(element.appMenuDisabled);
+    });
+  });
+
+  describe('#renderBackButton', () => {
+    let element;
+    beforeEach(async () => {
+      element = await basicFixture();
+    });
+
+    it('returns true when page is not a request', () => {
+      element.page = '';
+      assert.isTrue(element.renderBackButton);
+    });
+
+    it('returns false when page is request', () => {
+      element.page = 'request';
+      assert.isFalse(element.renderBackButton);
+    });
+  });
+
+  describe('#_oauth2redirectUri', () => {
+    let element;
+    beforeEach(async () => {
+      element = await basicFixture();
+    });
+
+    it('returns default URI', () => {
+      assert.equal(element._oauth2redirectUri, 'https://auth.advancedrestclient.com/oauth-popup.html');
+    });
+
+    it('returns configured URI', () => {
+      element.config = {
+        oauth2redirectUri: 'https://auth.com'
+      };
+      assert.equal(element._oauth2redirectUri, 'https://auth.com');
+    });
+  });
+
+  describe('Variables overlay', () => {
+    let element;
+    beforeEach(async () => {
+      element = await componentFixture();
+    });
+
+    it('sets _variablesOverlayOpened when button click', () => {
+      const button = element.shadowRoot.querySelector('.var-info-button');
+      MockInteractions.tap(button);
+      assert.isTrue(element._variablesOverlayOpened);
+    });
+
+    it('closes the overlay when editor is requested', async () => {
+      element._variablesOverlayOpened = true;
+      await aTimeout();
+      const node = element.shadowRoot.querySelector('variables-preview-overlay');
+      node.dispatchEvent(new CustomEvent('open-variables-editor'));
+      assert.isFalse(element._variablesOverlayOpened);
+    });
+
+    it('closes the overlay when close is requested', async () => {
+      element._variablesOverlayOpened = true;
+      await aTimeout();
+      const node = element.shadowRoot.querySelector('variables-preview-overlay');
+      node.dispatchEvent(new CustomEvent('overlay-closed'));
+      assert.isFalse(element._variablesOverlayOpened);
+    });
+
+    it('opens the editor when requested', async () => {
+      element._variablesOverlayOpened = true;
+      await aTimeout();
+      const node = element.shadowRoot.querySelector('variables-preview-overlay');
+      node.dispatchEvent(new CustomEvent('open-variables-editor'));
+      await customElements.whenDefined('variables-drawer-editor');
+      await aTimeout();
+      const editor = element.shadowRoot.querySelector('variables-drawer-editor');
+      assert.isTrue(editor.opened);
+    });
+  });
+
+  describe('Messages overlay', () => {
+    let element;
+    beforeEach(async () => {
+      element = await componentFixture();
+      element.newMessages = true;
+      await nextFrame();
+    });
+
+    it('opens messages overlay via button click', async () => {
+      const button = element.shadowRoot.querySelector('.nav-notification-button');
+      MockInteractions.tap(button);
+      assert.isTrue(element.messageCenterOpened);
+    });
+
+    it('calls read messages on the messaging service', async () => {
+      const node = element.shadowRoot.querySelector('#msgService');
+      const spy = sinon.spy(node, 'readMessages');
+      element.openInfoCenter();
+      assert.isTrue(spy.called);
+    });
+
+    it('mark messages read after a timeout', async () => {
+      element._messagesReadTimeout = 1;
+      const node = element.shadowRoot.querySelector('#msgService');
+      const spy = sinon.spy(node, 'makrkAllRead');
+      element.openInfoCenter();
+      await aTimeout(1);
+      assert.isTrue(spy.called);
+    });
+  });
+
+  describe('#requestModel', () => {
+    let element;
+    beforeEach(async () => {
+      element = await basicFixture();
+    });
+
+    it('returns a reference to a request-model', () => {
+      const node = element.requestModel;
+      assert.equal(node.localName, 'request-model');
+    });
+  });
+
+  describe('#workspace', () => {
+    let element;
+    beforeEach(async () => {
+      element = await basicFixture();
+    });
+
+    it('returns a reference to a workspace element', () => {
+      const node = element.workspace;
+      assert.equal(node.localName, 'arc-request-workspace');
+    });
+  });
+
+  describe('initApplication()', () => {
+    let element;
+    beforeEach(async () => {
+      element = await basicFixture();
+    });
+
+    it('calls initSettings()', async () => {
+      const spy = sinon.spy(element, 'initSettings');
+      element.initApplication();
+      await aTimeout();
+      assert.isTrue(spy.called);
+    });
+
+    it('calls _requestAuthToken()', async () => {
+      const spy = sinon.spy(element, '_requestAuthToken');
+      element.initApplication();
+      await aTimeout();
+      assert.isTrue(spy.called);
+    });
+
+    it('sets page from hash', async () => {
+      location.hash = '#socket'
+      element.initApplication();
+      assert.equal(element.page, 'socket');
+    });
+  });
+
+  describe('_setupRequest()', () => {
+    let element;
+    beforeEach(async () => {
+      element = await basicFixture();
+    });
+    let request;
+    before(async () => {
+      const data = await DataGenerator.insertSavedRequestData({
+        requestsSize: 1
       });
+      request = data.requests[0];
+    })
+
+    after(async () => {
+      await DataGenerator.destroySavedRequestData();
+    });
+
+    it('adds a request to the list', async () => {
+      await element._setupRequest({
+        type: 'saved',
+        id: request._id
+      });
+      assert.deepEqual(element.workspace.activeRequests[4], request);
+    });
+
+    it('updates request if already exists', async () => {
+      element.workspace.activeRequests.push({
+        _id: request._id
+      });
+      await element._setupRequest({
+        type: 'saved',
+        id: request._id
+      });
+      assert.deepEqual(element.workspace.activeRequests[4], request);
+    });
+
+    it('adds empty request when nop type', async () => {
+      await element._setupRequest({
+        type: 'new'
+      });
+      assert.deepEqual(element.workspace.activeRequests[4], {
+        _id: 5
+      });
+    });
+  });
+
+  describe('Process notification', () => {
+    const message = 'test-message';
+
+    let element;
+    beforeEach(async () => {
+      element = await basicFixture();
+    });
+
+    it('opens a toast', () => {
+      const toastId = 'test-id-1';
+      element._processStartHandler({
+        detail: {
+          id: toastId,
+          message
+        }
+      });
+      const node = document.body.querySelector(`paper-toast[data-process-id="${toastId}"]`);
+      assert.ok(node, 'toast is in the dom');
+      assert.notEqual(node.duration, 0, 'toast has duration');
+    });
+
+    it('toast can be canceled', () => {
+      const toastId = 'test-id-2';
+      element._processStartHandler({
+        detail: {
+          id: toastId,
+          message
+        }
+      });
+      element._processStopHandler({
+        detail: {
+          id: toastId
+        }
+      });
+      const node = document.body.querySelector(`paper-toast[data-process-id="${toastId}"]`);
+      assert.isFalse(node.opened);
+    });
+
+    it('toast is canceled on error', async () => {
+      const toastId = 'test-id-3';
+      element._processStartHandler({
+        detail: {
+          id: toastId,
+          message
+        }
+      });
+      const node = document.body.querySelector(`paper-toast[data-process-id="${toastId}"]`);
+      element._processErrorHandler({
+        detail: {
+          message: 'test'
+        }
+      });
+      await aTimeout();
+      assert.isFalse(node.opened);
+    });
+  });
+
+
+  describe('openLicense()', () => {
+    let element;
+    beforeEach(async () => {
+      element = await componentFixture();
+    });
+
+    it('opens the license dialog', async () => {
+      await element.openLicense();
+      const node = element.shadowRoot.querySelector('arc-license-dialog');
+      assert.isTrue(node.opened);
+    });
+  });
+
+  describe('_backHandler()', () => {
+    let element;
+    beforeEach(async () => {
+      element = await componentFixture();
+      element.page = 'test';
+    });
+
+    it('opens the workspace', async () => {
+      const spy = sinon.spy(element, 'openWorkspace');
+      const button = element.shadowRoot.querySelector('.app-back');
+      MockInteractions.tap(button);
+      assert.isTrue(spy.called);
+    });
+  });
+
+  describe('openWorkspaceDetails()', () => {
+    let element;
+    beforeEach(async () => {
+      element = await componentFixture();
+    });
+
+    it('calls openWorkspaceDetails on the workspace', async () => {
+      const spy = sinon.spy(element.workspace, 'openWorkspaceDetails');
+      element.openWorkspaceDetails();
+      element.workspace.openWorkspaceDetails.restore();
+      assert.isTrue(spy.called);
+    });
+
+    it('sets page to request', async () => {
+      element.page = 'about';
+      element.openWorkspaceDetails();
+      assert.equal(element.page, 'request');
+    });
+  });
+
+  describe('closeActiveTab()', () => {
+    let element;
+    beforeEach(async () => {
+      element = await componentFixture();
+    });
+
+    it('calls closeActiveTab on the workspace', async () => {
+      const spy = sinon.spy(element.workspace, 'closeActiveTab');
+      element.closeActiveTab();
+      element.workspace.closeActiveTab.restore();
+      assert.isTrue(spy.called);
     });
   });
 });
