@@ -1510,9 +1510,11 @@ export const ArcAppMixin = (base) => class extends base {
       _oauth2redirectUri,
       narrow,
       compatibility,
-      outlined
+      outlined,
+      page
     } = this;
     const config = this.config || {};
+    const workspaceHidden = this.page !== 'request';
     return html`<arc-request-workspace
       data-route="request"
       id="workspace"
@@ -1520,6 +1522,7 @@ export const ArcAppMixin = (base) => class extends base {
       oauth2redirecturi="${_oauth2redirectUri}"
       ?ignorecontentonget="${config.ignoreContentOnGet}"
       ?narrow="${narrow}"
+      ?hidden="workspaceHidden"
       @open-web-url="${this._openWebUrlHandler}"
       ?compatibility="${compatibility}"
       ?outlined="${outlined}"
