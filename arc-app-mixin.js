@@ -1522,7 +1522,7 @@ export const ArcAppMixin = (base) => class extends base {
       oauth2redirecturi="${_oauth2redirectUri}"
       ?ignorecontentonget="${config.ignoreContentOnGet}"
       ?narrow="${narrow}"
-      ?hidden="workspaceHidden"
+      ?hidden="${workspaceHidden}"
       @open-web-url="${this._openWebUrlHandler}"
       ?compatibility="${compatibility}"
       ?outlined="${outlined}"
