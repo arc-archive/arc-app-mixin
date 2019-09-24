@@ -1,7 +1,7 @@
 {
   "name": "@advanced-rest-client/arc-app-mixin",
   "description": "ARC main application mixing to be shared between different versions of ARC (web, electron, chrome)",
-  "version": "3.0.1",
+  "version": "3.0.2",
   "license": "Apache-2.0",
   "main": "arc-app-mixin.js",
   "keywords": [
@@ -38,6 +38,7 @@
     "@advanced-rest-client/cookie-manager": "^3.0.0",
     "@advanced-rest-client/environment-selector": "^3.0.1",
     "@advanced-rest-client/export-panel": "^3.1.0",
+    "@advanced-rest-client/import-panel": "^3.0.0",
     "@advanced-rest-client/google-drive-browser": "^3.1.0",
     "@advanced-rest-client/history-panel": "^3.0.3",
     "@advanced-rest-client/oauth-authorization": "^3.0.1",
@@ -61,7 +62,6 @@
     "@advanced-rest-client/arc-data-generator": "^3.0.4",
     "@advanced-rest-client/date-time": "^3.0.2",
     "@advanced-rest-client/eslint-config": "^1.1.2",
-    "@advanced-rest-client/import-panel": "^3.0.0",
     "@advanced-rest-client/prettier-config": "^0.1.0",
     "@advanced-rest-client/testing-karma-sl": "^1.0.4",
     "@commitlint/cli": "^8.1.0",
