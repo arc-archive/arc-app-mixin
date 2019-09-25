@@ -1276,7 +1276,7 @@ export const ArcAppMixin = (base) => class extends base {
     const { sysVars } = this;
     return html`
     <variables-manager
-      ?systemvariables="${sysVars}"
+      .systemVariables="${sysVars}"
       ?sysvariablesdisabled="${this._computeVarDisabled(config.systemVariablesEnabled)}"
       ?appvariablesdisabled="${this._computeVarDisabled(config.appVariablesEnabled)}"></variables-manager>
     <variables-evaluator
@@ -1400,6 +1400,7 @@ export const ArcAppMixin = (base) => class extends base {
     const {
       compatibility,
       outlined,
+      sysVars,
       _variablesOverlayOpened,
       _variablesButton
     } = this;
@@ -1424,6 +1425,7 @@ export const ArcAppMixin = (base) => class extends base {
       </anypoint-icon-button>
       <variables-preview-overlay
         class="var-panel"
+        .systemVariables="${sysVars}"
         .positionTarget="${_variablesButton}"
         dynamicalign
         horizontalalign="auto"
