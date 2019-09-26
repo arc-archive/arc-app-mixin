@@ -130,8 +130,8 @@ export const ArcAppMixin = (base) => class extends base {
     if (old === value) {
       return;
     }
-    this.requestUpdate('_variablesOverlayOpened', old);
     this.__variablesOverlayOpened = value;
+    this.requestUpdate('_variablesOverlayOpened', old);
     this._varsOverlayChanged(value);
   }
 
@@ -270,6 +270,13 @@ export const ArcAppMixin = (base) => class extends base {
        * Enables material's outlined theme for inputs.
        */
       outlined: { type: Boolean },
+      /**
+       * System variables, if any.
+       * It a map of key - value pairs.
+       */
+      sysVars: { type: Object },
+
+      _variablesOverlayOpened: { type: Boolean }
     };
   }
 
@@ -1053,9 +1060,11 @@ export const ArcAppMixin = (base) => class extends base {
   }
 
   _variablesPreviewClosed() {
-    if (this._variablesOverlayOpened) {
-      this._variablesOverlayOpened = false;
-    }
+    this._variablesOverlayOpened = false;
+  }
+
+  _variablesPreviewOpened() {
+    this._variablesOverlayOpened = true;
   }
 
   _infoMessagesHandler(e) {
@@ -1400,7 +1409,6 @@ export const ArcAppMixin = (base) => class extends base {
     const {
       compatibility,
       outlined,
-      sysVars,
       _variablesOverlayOpened,
       _variablesButton
     } = this;
@@ -1425,7 +1433,6 @@ export const ArcAppMixin = (base) => class extends base {
       </anypoint-icon-button>
       <variables-preview-overlay
         class="var-panel"
-        .systemVariables="${sysVars}"
         .positionTarget="${_variablesButton}"
         dynamicalign
         horizontalalign="auto"
@@ -1433,6 +1440,7 @@ export const ArcAppMixin = (base) => class extends base {
         verticaloffset="44"
         @open-variables-editor="${this._variablesOpenRequest}"
         @overlay-closed="${this._variablesPreviewClosed}"
+        @overlay-opened="${this._variablesPreviewOpened}"
         .opened="${_variablesOverlayOpened}"
         maskedvalues
         ?compatibility="${compatibility}"
