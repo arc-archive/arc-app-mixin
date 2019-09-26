@@ -987,23 +987,16 @@ describe('ArcAppMixin', function() {
       await DataGenerator.destroySavedRequestData();
     });
 
-    it('adds a request to the list', async () => {
+    it('adds addRequestById() on the workspace', async () => {
+      const node = element.workspace;
+      const spy = sinon.spy(node, 'addRequestById');
       await element._setupRequest({
         type: 'saved',
         id: request._id
       });
-      assert.deepEqual(element.workspace.activeRequests[4], request);
-    });
-
-    it('updates request if already exists', async () => {
-      element.workspace.activeRequests.push({
-        _id: request._id
-      });
-      await element._setupRequest({
-        type: 'saved',
-        id: request._id
-      });
-      assert.deepEqual(element.workspace.activeRequests[4], request);
+      assert.isTrue(spy.called, 'function called');
+      assert.equal(spy.args[0][0], 'saved', 'type argument is set');
+      assert.equal(spy.args[0][1], request._id, 'id argument is set');
     });
 
     it('adds empty request when nop type', async () => {

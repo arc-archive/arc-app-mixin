@@ -998,24 +998,8 @@ export const ArcAppMixin = (base) => class extends base {
     if (params.type === 'latest' || !params.id) {
       return;
     }
-    const model = this.requestModel;
-    if (!model) {
-      this.log.warn('Request model not ready.');
-      return;
-    }
-    try {
-      const request = await model.read(type, id);
-      const workspace = this.workspace;
-      const index = workspace.findRequestIndex(request._id);
-      if (index === -1) {
-        workspace.appendRequest(request);
-      } else {
-        workspace.updateRequestObject(request, index);
-        workspace.selected = index;
-      }
-    } catch (cause) {
-      this.log.warn('Restoring request:', cause);
-    }
+    const workspace = this.workspace;
+    await workspace.addRequestById(type, id);
   }
 
 

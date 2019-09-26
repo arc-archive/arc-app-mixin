@@ -32,7 +32,7 @@
     "@advanced-rest-client/arc-messages-service": "^3.0.0",
     "@advanced-rest-client/arc-models": "^3.0.0-preview.14",
     "@advanced-rest-client/arc-request-logic": "^3.0.0",
-    "@advanced-rest-client/arc-request-workspace": "^3.0.0",
+    "@advanced-rest-client/arc-request-workspace": "^3.0.2",
     "@advanced-rest-client/arc-settings-panel": "^3.0.2",
     "@advanced-rest-client/authorization-data-saver": "^3.0.0",
     "@advanced-rest-client/cookie-manager": "^3.0.0",
@@ -74,7 +74,7 @@
     "deepmerge": "^4.0.0",
     "es-dev-server": "^1.18.1",
     "husky": "^1.0.0",
-    "lint-staged": "^9.3.0",
+    "lint-staged": "^9.4.0",
     "lit-html": "^1.1.2",
     "sinon": "^7.5.0"
   },

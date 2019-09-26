@@ -50,7 +50,8 @@ class TestElement extends ArcAppMixin(LitElement) {
         findRequestIndex: (id) => this._workspace.activeRequests.findIndex((item) => item._id === id),
         appendRequest: (r) => this._workspace.activeRequests.push(r),
         openWorkspaceDetails: noop,
-        closeActiveTab: noop
+        closeActiveTab: noop,
+        addRequestById: noop
       };
     }
     return this._workspace;
