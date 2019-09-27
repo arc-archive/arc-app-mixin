@@ -1289,7 +1289,6 @@ export const ArcAppMixin = (base) => class extends base {
 
   menuTemplate() {
     const {
-      popupMenuExperimentEnabled,
       historyEnabled,
       compatibility
     } = this;
@@ -1299,7 +1298,7 @@ export const ArcAppMixin = (base) => class extends base {
       restapi
       ?compatibility="${compatibility}"
       ?draggableenabled="${config.draggableEnabled}"
-      ?allowpopup="${popupMenuExperimentEnabled}"
+      ?allowpopup="${config.popupMenuExperimentEnabled}"
       .listType="${config.viewListType}"
       ?historyenabled="${historyEnabled}"
       ?hidehistory="${menuConfig.hideHistory}"
