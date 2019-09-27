@@ -840,11 +840,11 @@ export const ArcAppMixin = (base) => class extends base {
     const { data } = e.detail;
     try {
       await this._loadComponent('import-panel/import-panel', '@advanced-rest-client');
+      this.openImport();
       await aTimout();
       const node = this.shadowRoot.querySelector('import-panel');
       node.data = data;
       node.selectedPage = 3;
-      this.openImport();
     } catch (e) {
       this.notifyError(e.message);
     }
@@ -1633,7 +1633,7 @@ export const ArcAppMixin = (base) => class extends base {
     } = this;
     return html`<google-drive-browser
       .accessToken="${this.driveAccessToken}"
-      @drive-file-picker-data="${this._openDriveRequest}"
+      @drive-file="${this._openDriveRequest}"
       ?compatibility="${compatibility}"
       ?outlined="${outlined}"
     ></google-drive-browser>`;
