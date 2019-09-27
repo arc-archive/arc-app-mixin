@@ -557,6 +557,7 @@ export const ArcAppMixin = (base) => class extends base {
       this.config = {};
     }
     this.config[n] = v;
+    this.requestUpdate();
     switch (n) {
       case 'telemetry':
         this._telemetryChanged(v);
