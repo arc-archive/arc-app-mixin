@@ -1084,7 +1084,8 @@ describe('ArcAppMixin', function() {
     let element;
     beforeEach(async () => {
       element = await componentFixture();
-      element.page = 'test';
+      element.page = 'history';
+      await nextFrame();
     });
 
     it('opens the workspace', async () => {
