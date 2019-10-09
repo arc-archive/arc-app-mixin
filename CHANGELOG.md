@@ -25,3 +25,25 @@
 
 
 
+## 3.0.11 (2019-10-09)
+
+
+### Bug Fixes
+
+* adding workspace hidding when sub-screen is enabled ([a7c79bc](https://github.com/advanced-rest-client/arc-app-mixin/commit/a7c79bc))
+* fixing drive import ([52ef439](https://github.com/advanced-rest-client/arc-app-mixin/commit/52ef439))
+* fixing setting popu menu config on the menu ([f78c57b](https://github.com/advanced-rest-client/arc-app-mixin/commit/f78c57b))
+* fixing system variables setting ([9f62835](https://github.com/advanced-rest-client/arc-app-mixin/commit/9f62835))
+* fixing variables overlay initialization ([9494759](https://github.com/advanced-rest-client/arc-app-mixin/commit/9494759))
+* moxing import panel to dependencies ([8b4aa24](https://github.com/advanced-rest-client/arc-app-mixin/commit/8b4aa24))
+* setting hidden attribute on workspace ([59b1b55](https://github.com/advanced-rest-client/arc-app-mixin/commit/59b1b55))
+
+
+### Features
+
+* adding export encryption as an option ([3ae9412](https://github.com/advanced-rest-client/arc-app-mixin/commit/3ae9412))
+* adding types ([7cf8547](https://github.com/advanced-rest-client/arc-app-mixin/commit/7cf8547))
+* adding view update after settings change ([a54b2ed](https://github.com/advanced-rest-client/arc-app-mixin/commit/a54b2ed))
+
+
+
