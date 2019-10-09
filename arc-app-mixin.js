@@ -276,6 +276,11 @@ export const ArcAppMixin = (base) => class extends base {
        */
       sysVars: { type: Object },
 
+      /**
+       * When set is enables encryption options in various views
+       */
+      withEncrypt: { type: Boolean },
+
       _variablesOverlayOpened: { type: Boolean }
     };
   }
@@ -1505,7 +1510,7 @@ export const ArcAppMixin = (base) => class extends base {
       narrow,
       compatibility,
       outlined,
-      page
+      withEncrypt
     } = this;
     const config = this.config || {};
     const workspaceHidden = this.page !== 'request';
@@ -1520,6 +1525,7 @@ export const ArcAppMixin = (base) => class extends base {
       @open-web-url="${this._openWebUrlHandler}"
       ?compatibility="${compatibility}"
       ?outlined="${outlined}"
+      ?withEncrypt="${withEncrypt}"
     ></arc-request-workspace>`;
   }
 
@@ -1539,7 +1545,8 @@ export const ArcAppMixin = (base) => class extends base {
   requestHistoryTemplate() {
     const {
       compatibility,
-      outlined
+      outlined,
+      withEncrypt
     } = this;
     const config = this.config || {};
     return html`
@@ -1548,6 +1555,7 @@ export const ArcAppMixin = (base) => class extends base {
       ?draggableenabled="${config.draggableEnabled}"
       ?compatibility="${compatibility}"
       ?outlined="${outlined}"
+      ?withEncrypt="${withEncrypt}"
     ></history-panel>
     `;
   }
@@ -1555,7 +1563,8 @@ export const ArcAppMixin = (base) => class extends base {
   requestSavedTemplate() {
     const {
       compatibility,
-      outlined
+      outlined,
+      withEncrypt
     } = this;
     const config = this.config || {};
     return html`
@@ -1564,6 +1573,7 @@ export const ArcAppMixin = (base) => class extends base {
       ?draggableenabled="${config.draggableEnabled}"
       ?compatibility="${compatibility}"
       ?outlined="${outlined}"
+      ?withEncrypt="${withEncrypt}"
     ></saved-requests-panel>
     `;
   }
@@ -1585,12 +1595,14 @@ export const ArcAppMixin = (base) => class extends base {
   exportViewTemplate() {
     const {
       compatibility,
-      outlined
+      outlined,
+      withEncrypt
     } = this;
     return html`
     <export-panel
       ?compatibility="${compatibility}"
       ?outlined="${outlined}"
+      ?withEncrypt="${withEncrypt}"
     ></export-panel>
     `;
   }
@@ -1614,7 +1626,8 @@ export const ArcAppMixin = (base) => class extends base {
   projectDetailsViewTemplate() {
     const {
       compatibility,
-      outlined
+      outlined,
+      withEncrypt
     } = this;
     const config = this.config || {};
     return html`<project-details
@@ -1623,6 +1636,7 @@ export const ArcAppMixin = (base) => class extends base {
       .projectId="${this.routeParams.id}"
       ?compatibility="${compatibility}"
       ?outlined="${outlined}"
+      ?withEncrypt="${withEncrypt}"
     ></project-details>`;
   }
 
@@ -1642,11 +1656,13 @@ export const ArcAppMixin = (base) => class extends base {
   cookiesViewTemplate() {
     const {
       compatibility,
-      outlined
+      outlined,
+      withEncrypt
     } = this;
     return html`<cookie-manager
       ?compatibility="${compatibility}"
       ?outlined="${outlined}"
+      ?withEncrypt="${withEncrypt}"
     ></cookie-manager>`;
   }
 

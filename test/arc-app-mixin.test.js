@@ -17,6 +17,12 @@ describe('ArcAppMixin', function() {
     `);
   }
 
+  async function exportEncryptFixture() {
+    return await fixture(html`
+      <test-element componentsdir="./node_modules" withEncrypt></test-element>
+    `);
+  }
+
   async function customDimensionsFixture() {
     return await fixture(html`
       <test-element browserversion="123" appversion="456" appchannel="stable"></test-element>
@@ -1127,6 +1133,54 @@ describe('ArcAppMixin', function() {
       element.closeActiveTab();
       element.workspace.closeActiveTab.restore();
       assert.isTrue(spy.called);
+    });
+  });
+
+  describe('Encryption options', () => {
+    it('sets encryption flag on history panel', async () => {
+      const element = await exportEncryptFixture();
+      await element._pageChanged('history');
+      element.page = 'history';
+      await aTimeout();
+      const node = element.shadowRoot.querySelector('history-panel');
+      assert.isTrue(node.withEncrypt);
+    });
+
+    it('sets encryption flag on saved requests panel', async () => {
+      const element = await exportEncryptFixture();
+      await element._pageChanged('saved');
+      element.page = 'saved';
+      await aTimeout();
+      const node = element.shadowRoot.querySelector('saved-requests-panel');
+      assert.isTrue(node.withEncrypt);
+    });
+
+    it('sets encryption flag on project details panel', async () => {
+      const element = await exportEncryptFixture();
+      await element._pageChanged('project');
+      element.page = 'project';
+      element.routeParams = { id: 'test' };
+      await aTimeout();
+      const node = element.shadowRoot.querySelector('project-details');
+      assert.isTrue(node.withEncrypt);
+    });
+
+    it('sets encryption flag on project details panel', async () => {
+      const element = await exportEncryptFixture();
+      await element._pageChanged('cookie-manager');
+      element.page = 'cookie-manager';
+      await aTimeout();
+      const node = element.shadowRoot.querySelector('cookie-manager');
+      assert.isTrue(node.withEncrypt);
+    });
+
+    it('sets encryption flag on project details panel', async () => {
+      const element = await exportEncryptFixture();
+      await element._pageChanged('data-export');
+      element.page = 'data-export';
+      await aTimeout();
+      const node = element.shadowRoot.querySelector('export-panel');
+      assert.isTrue(node.withEncrypt);
     });
   });
 });
