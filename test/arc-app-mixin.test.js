@@ -41,12 +41,10 @@ describe('ArcAppMixin', function() {
       element = await componentFixture();
     });
 
-    it('Loads a component', () => {
-      return element._loadComponent('date-time/date-time', '@advanced-rest-client')
-      .then(() => {
-        const instance = window.customElements.get('date-time');
-        assert.ok(instance);
-      });
+    it('Loads a component', async () => {
+      await element._loadComponent('date-time/date-time', '@advanced-rest-client');
+      const instance = window.customElements.get('date-time');
+      assert.ok(instance);
     });
 
     it('Rejects when component cannot be loaded', () => {
@@ -687,12 +685,8 @@ describe('ArcAppMixin', function() {
     });
     [
       ['openCookieManager', 'cookie-manager'],
-      ['openExchangeSearch', 'exchange-search'],
-      ['openThemesPanel', 'themes-panel'],
-      ['openAbout', 'about'],
       ['openDrivePicker', 'drive'],
       ['openSettings', 'settings'],
-      ['openHostRules', 'hosts-rules'],
       ['openImport', 'data-import'],
       ['openExport', 'data-export'],
       ['openWebSocket', 'socket'],
@@ -1116,7 +1110,7 @@ describe('ArcAppMixin', function() {
     });
 
     it('sets page to request', async () => {
-      element.page = 'about';
+      element.page = 'socket';
       element.openWorkspaceDetails();
       assert.equal(element.page, 'request');
     });

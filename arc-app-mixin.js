@@ -42,6 +42,14 @@ import '@anypoint-web-components/anypoint-menu-button/anypoint-menu-button.js'
 import '@anypoint-web-components/anypoint-listbox/anypoint-listbox.js'
 import '@anypoint-web-components/anypoint-item/anypoint-item.js'
 import '@anypoint-web-components/anypoint-dropdown-menu/anypoint-dropdown-menu.js'
+import '@polymer/app-layout/app-drawer-layout/app-drawer-layout.js';
+import '@polymer/app-layout/app-drawer/app-drawer.js';
+import '@polymer/app-layout/app-header-layout/app-header-layout.js';
+import '@polymer/app-layout/app-header/app-header.js';
+import '@polymer/app-layout/app-toolbar/app-toolbar.js';
+import '@polymer/iron-media-query/iron-media-query.js';
+import '@polymer/paper-toast/paper-toast.js';
+import '@advanced-rest-client/arc-info-messages/arc-info-messages.js';
 async function aTimout(timeout) {
   return new Promise((resolve) => {
     setTimeout(() => resolve(), timeout);
@@ -296,7 +304,6 @@ export const ArcAppMixin = (base) => class extends base {
     this._appVersionRequestHandler = this._appVersionRequestHandler.bind(this);
     this._googleOauthTokenRequested = this._googleOauthTokenRequested.bind(this);
     this._inspectImportHandler = this._inspectImportHandler.bind(this);
-    this._apiDataHandler = this._apiDataHandler.bind(this);
     this._processErrorHandler = this._processErrorHandler.bind(this);
     this._processStartHandler = this._processStartHandler.bind(this);
     this._processStopHandler = this._processStopHandler.bind(this);
@@ -316,7 +323,6 @@ export const ArcAppMixin = (base) => class extends base {
     window.addEventListener('app-version', this._appVersionRequestHandler);
     window.addEventListener('google-autorize', this._googleOauthTokenRequested);
     window.addEventListener('import-data-inspect', this._inspectImportHandler);
-    window.addEventListener('api-data-ready', this._apiDataHandler);
     window.addEventListener('process-error', this._processErrorHandler);
     window.addEventListener('process-loading-start', this._processStartHandler);
     window.addEventListener('process-loading-stop', this._processStopHandler);
@@ -331,7 +337,6 @@ export const ArcAppMixin = (base) => class extends base {
     window.removeEventListener('app-version', this._appVersionRequestHandler);
     window.removeEventListener('google-autorize', this._googleOauthTokenRequested);
     window.removeEventListener('import-data-inspect', this._inspectImportHandler);
-    window.removeEventListener('api-data-ready', this._apiDataHandler);
     window.removeEventListener('process-error', this._processErrorHandler);
     window.removeEventListener('process-loading-start', this._processStartHandler);
     window.removeEventListener('process-loading-stop', this._processStopHandler);
@@ -340,9 +345,14 @@ export const ArcAppMixin = (base) => class extends base {
   }
 
   firstUpdated() {
+    super.firstUpdated();
     if (this.page === 'request') {
       this._setupRequest(this.routeParams);
     }
+    setTimeout(() => {
+      this._variablesButton = this.shadowRoot.querySelector('#varToggleButton');
+      this._scrollTarget = this.shadowRoot.querySelector('#scrollingRegion').$.contentContainer;
+    });
   }
   /**
    * Lazy loads component to the DOM.
@@ -352,7 +362,7 @@ export const ArcAppMixin = (base) => class extends base {
    * **Example**
    *
    * ```javascript
-   * this._loadComponent('api-console/api-console', '@api-components')
+   * this._loadComponent('arc-settings/arc-settings', '@advanced-rest-client')
    * .then(() => {}); // console is now loaded.
    * ```
    *
@@ -423,11 +433,6 @@ export const ArcAppMixin = (base) => class extends base {
           type: params.type
         };
         break;
-      case 'api-console':
-        routeParams = {
-          id: params.id
-        };
-        break;
     }
     if (page) {
       this.page = page;
@@ -454,7 +459,6 @@ export const ArcAppMixin = (base) => class extends base {
     switch (this.page) {
       case 'history': screenName = 'History'; break;
       case 'settings': screenName = 'Settings'; break;
-      case 'about': screenName = 'About'; break;
       case 'socket': screenName = 'Socket'; break;
       case 'saved': screenName = 'Saved'; break;
       case 'data-import': screenName = 'Data import'; break;
@@ -464,11 +468,6 @@ export const ArcAppMixin = (base) => class extends base {
       case 'request': screenName = 'Request panel'; break;
       case 'drive': screenName = 'Drive selector'; break;
       case 'cookie-manager': screenName = 'Cookie manager'; break;
-      case 'api-console': screenName = 'API Console'; break;
-      case 'rest-projects': screenName = 'REST APIs list'; break;
-      case 'exchange-search': screenName = 'Exchange search'; break;
-      case 'hosts-rules': screenName = 'Hosts rules'; break;
-      case 'themes-panel': screenName = 'Themes panel'; break;
     }
     this.dispatchEvent(new CustomEvent('send-analytics', {
       composed: true,
@@ -709,30 +708,6 @@ export const ArcAppMixin = (base) => class extends base {
     });
   }
   /**
-   * Navigates to Exchange search panel
-   */
-  openExchangeSearch() {
-    this._dispatchNavigate({
-      base: 'exchange-search'
-    });
-  }
-  /**
-   * Navigates to themes panel
-   */
-  openThemesPanel() {
-    this._dispatchNavigate({
-      base: 'themes-panel'
-    });
-  }
-  /**
-   * Navigates to about screen
-   */
-  openAbout() {
-    this._dispatchNavigate({
-      base: 'about'
-    });
-  }
-  /**
    * Navigates to Google Drive file browser
    */
   openDrivePicker() {
@@ -746,14 +721,6 @@ export const ArcAppMixin = (base) => class extends base {
   openSettings() {
     this._dispatchNavigate({
       base: 'settings'
-    });
-  }
-  /**
-   * Opens the host rules editor.
-   */
-  openHostRules() {
-    this._dispatchNavigate({
-      base: 'hosts-rules'
     });
   }
   /**
@@ -1084,14 +1051,6 @@ export const ArcAppMixin = (base) => class extends base {
     this.messageCenterOpened = false;
   }
 
-  async _apiDataHandler(e) {
-    const { model, type } = e.detail;
-    await this._setApiData(model, type.type);
-    this._dispatchNavigate({
-      base: 'api-console'
-    });
-  }
-
   /**
    * Handles opening a file from Google Drive.
    * Dispatches `import-process-file` so the import module processes the data
@@ -1220,6 +1179,75 @@ export const ArcAppMixin = (base) => class extends base {
     this.workspace.closeActiveTab();
   }
 
+  _narrowHandler(e) {
+    this.narrow = e.detail.value;
+  }
+
+  _narrowLayoutHandler(e) {
+    this.narrowLayout = e.detail.value;
+  }
+  /**
+   * A template to be overriten by different implementations on different platforms.
+   * Should renturn components that connects ARC with the platform APIs.
+   * This elements are inserted after models, requests logic, and variables
+   * elements. However their APIs may not yet be available.
+   */
+  _platformHelpersTemplate() {}
+  /**
+   * Application main template to be used in `render()` function.
+   * Contains application layout.
+   * @return {Object}
+   */
+  applicationTemplate() {
+    const {
+      narrowLayout,
+      appMenuDisabled,
+      messageCenterOpened,
+      appMessages
+    } = this;
+    return html`
+    ${this.modelsTemplate()}
+    ${this.requestLogicTemplate()}
+    ${this.variablesLogicTemplate()}
+    ${this._platformHelpersTemplate()}
+    <app-drawer-layout fullbleed
+      ?narrow="${narrowLayout}"
+      ?force-narrow="${appMenuDisabled}"
+      responsive-width="980px"
+      @narrow-changed="${this._narrowLayoutHandler}"
+    >
+      <app-drawer slot="drawer" align="start">
+        ${this.menuTemplate()}
+      </app-drawer>
+      <app-drawer
+        slot="drawer"
+        align="end"
+        .opened="${messageCenterOpened}"
+        class="info-center-drawer"
+      >
+        <arc-info-messages
+          .messages="${appMessages}"
+          @close="${this.closeInfoCenter}"
+        ></arc-info-messages>
+      </app-drawer>
+      <app-header-layout has-scrolling-region id="scrollingRegion">
+        <app-header slot="header" fixed shadow scroll-target="scrollingRegion">
+          <app-toolbar>
+            ${this.mainToolbarTemplate()}
+          </app-toolbar>
+        </app-header>
+        <div class="pages">
+          ${this.workspaceTemplate()}
+          ${this._pageTemplate()}
+        </div>
+      </app-header-layout>
+    </app-drawer-layout>
+    <iron-media-query query="(max-width: 700px)" @query-matches-changed="${this._narrowHandler}"></iron-media-query>
+    ${this.variablesDrawerTemplate()}
+    ${this._analyticsTemplate()}
+    ${this.licenseTemplate()}`;
+  }
+
   modelsTemplate() {
     return html`<auth-data-model></auth-data-model>
     <project-model></project-model>
@@ -1327,7 +1355,7 @@ export const ArcAppMixin = (base) => class extends base {
       ?compatibility="${compatibility}"
       aria-label="Activate to toggle application menu"
     >
-      <span class="icon">${menu}</span>
+      <span class="icon" drawer-toggle>${menu}</span>
     </anypoint-icon-button>`;
   }
 
@@ -1418,7 +1446,7 @@ export const ArcAppMixin = (base) => class extends base {
         ?compatibility="${compatibility}"
         aria-label="Activate to open variables list"
       >
-        <span class="icon">${infoOutline}</span>
+        <span class="icon var-toggle-icon">${infoOutline}</span>
       </anypoint-icon-button>
       <variables-preview-overlay
         class="var-panel"
@@ -1445,7 +1473,8 @@ export const ArcAppMixin = (base) => class extends base {
     <div main-title></div>
     ${this._appToolbarMessagesButtonTemplate()}
     ${this._appToolbarUpdateButtonTemplate()}
-    ${this._appToolbarEnvTemplate()}`;
+    ${this._appToolbarEnvTemplate()}
+    <slot name="main-toolbar-icon-suffix"></slot>`;
   }
 
   _trackerTemplate(tid) {
@@ -1691,6 +1720,7 @@ export const ArcAppMixin = (base) => class extends base {
       case 'project': return this.projectDetailsViewTemplate();
       case 'drive': return this.gdriveViewTemplate();
       case 'cookie-manager': return this.cookiesViewTemplate();
+      case 'settings': return this.settingsViewTemplate({ });
       default: return '';
     }
   }

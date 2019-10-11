@@ -1,39 +1,31 @@
 import { LitElement, html } from 'lit-element';
 import { ArcDemoPage } from '@advanced-rest-client/arc-demo-helper/ArcDemoPage.js';
-import '@anypoint-web-components/anypoint-checkbox/anypoint-checkbox.js';
-import '@anypoint-web-components/anypoint-radio-button/anypoint-radio-button.js';
-import '@anypoint-web-components/anypoint-radio-button/anypoint-radio-group.js';
-import '@advanced-rest-client/arc-demo-helper/arc-interactive-demo.js';
-import '@advanced-rest-client/oauth-authorization/oauth2-authorization.js';
+import '@advanced-rest-client/arc-local-store-preferences/arc-local-store-workspace.js';
+import '@advanced-rest-client/arc-local-store-preferences/arc-local-store-preferences.js';
 import { ArcAppMixin } from '../arc-app-mixin.js';
+import { moreVert } from '@advanced-rest-client/arc-icons/ArcIcons.js';
+import styles from '../AppStyles.js';
 
 class ArcApp extends ArcAppMixin(LitElement) {
+  static get styles() {
+    return styles;
+  }
+
   static get properties() {
     return {};
   }
 
-  render() {
-    const {
-      appMessages
-    } = this;
+  _platformHelpersTemplate() {
     return html`
-    ${this.modelsTemplate()}
     ${this.importExportTemplate({ electron: true })}
-    ${this.requestLogicTemplate()}
-    ${this.variablesLogicTemplate()}
     ${this.appMessagesLogicTemplate('electron')}
+    `;
+  }
 
-    ${this.menuTemplate()}
-    <arc-info-messages
-      .messages="${appMessages}"
-      @close="${this.closeInfoCenter}"
-    ></arc-info-messages>
-    ${this.mainToolbarTemplate()}
-    ${this.workspaceTemplate()}
-    ${this._pageTemplate()}
-    ${this.variablesDrawerTemplate()}
-    ${this._analyticsTemplate()}
-    ${this.licenseTemplate()}`;
+  render() {
+    return html`
+    ${this.applicationTemplate()}
+    `;
   }
 }
 window.customElements.define('arc-app', ArcApp);
@@ -44,10 +36,8 @@ class DemoPage extends ArcDemoPage {
     // this.initObservableProperties([
     // ]);
     this._componentName = 'arc-app-mixin';
-    this.demoStates = ['Default'];
 
-    this._demoStateHandler = this._demoStateHandler.bind(this);
-    this._toggleMainOption = this._toggleMainOption.bind(this);
+    this._appActionHandler = this._appActionHandler.bind(this);
 
     this.systemVariables = {
       CHROME_DESKTOP: "Electron.desktop",
@@ -88,48 +78,55 @@ class DemoPage extends ArcDemoPage {
     };
   }
 
-  _toggleMainOption(e) {
-    const { name, checked } = e.target;
-    this[name] = checked;
+  get app() {
+    return document.querySelector('arc-app');
   }
 
-  _demoStateHandler(e) {
-    const state = e.detail.value;
-    this.outlined = state === 1;
-    this.compatibility = state === 2;
+  _appActionHandler(e) {
+    const fn = e.target.selectedItem.dataset.function;
+    document.querySelector('arc-app')[fn]();
   }
 
   _demoTemplate() {
     const {
-      demoStates,
-      darkThemeActive,
       systemVariables
     } = this;
     return html`
-      <section class="documentation-section">
-        <h3>Interactive demo</h3>
-        <p>
-          This demo lets you preview the REST APIs menu element with various
-          configuration options.
-        </p>
-
-        <arc-interactive-demo
-          .states="${demoStates}"
-          @state-chanegd="${this._demoStateHandler}"
-          ?dark="${darkThemeActive}"
+    <arc-app
+      .sysVars="${systemVariables}"
+      slot="content"
+    >
+      <anypoint-menu-button
+        verticalalign="top"
+        horizontalalign="auto"
+        slot="main-toolbar-icon-suffix"
+      >
+        <anypoint-icon-button slot="dropdown-trigger">
+          <span class="icon web-app-nav">${moreVert}</span>
+        </anypoint-icon-button>
+        <anypoint-listbox
+          slot="dropdown-content"
+          @selected-changed="${this._appActionHandler}"
         >
-          <arc-app
-            .sysVars="${systemVariables}"
-            slot="content"
-          ></arc-app>
-        </arc-interactive-demo>
-      </section>
+          <anypoint-item data-function="openCookieManager">Cookie manager</anypoint-item>
+          <anypoint-item data-function="openDrivePicker">Google Drive Browser</anypoint-item>
+          <anypoint-item data-function="openSettings">Settings</anypoint-item>
+          <anypoint-item data-function="openImport">Data import</anypoint-item>
+          <anypoint-item data-function="openExport">Data export</anypoint-item>
+          <anypoint-item data-function="openWebSocket">Websocket</anypoint-item>
+          <anypoint-item data-function="openInfoCenter">Info center</anypoint-item>
+          <anypoint-item data-function="openLicense">License</anypoint-item>
+          <anypoint-item data-function="openWorkspaceDetails">Workspace details</anypoint-item>
+        </anypoint-listbox>
+      </anypoint-menu-button>
+    </arc-app>
     `;
   }
 
   contentTemplate() {
     return html`
-      <h2>Exchange seatch panel</h2>
+      <arc-local-store-workspace></arc-local-store-workspace>
+      <arc-local-store-preferences></arc-local-store-preferences>
       ${this._demoTemplate()}
     `;
   }
@@ -138,3 +135,7 @@ class DemoPage extends ArcDemoPage {
 const instance = new DemoPage();
 instance.render();
 window._demo = instance;
+setTimeout(() => {
+  const node = document.querySelector('arc-app');
+  node.initApplication();
+}, 1000);

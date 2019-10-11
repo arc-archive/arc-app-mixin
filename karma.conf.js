@@ -78,6 +78,10 @@ module.exports = (config) => {
         {
           pattern: 'node_modules/codemirror/addon/lint/json-lint.js',
           type: 'js'
+        },
+        {
+          pattern: 'dev-lib/jexl.min.js',
+          type: 'js'
         }
       ],
 
@@ -103,6 +107,10 @@ module.exports = (config) => {
           }
         }
       },
+
+      exclude: [
+       'dev-lib/*.js'
+     ],
     })
   );
   return config;

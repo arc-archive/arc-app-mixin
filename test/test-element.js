@@ -13,25 +13,38 @@ class TestElement extends ArcAppMixin(LitElement) {
     }`;
   }
 
-  render() {
+  _platformHelpersTemplate() {
     return html`
-    ${this.modelsTemplate()}
     ${this.importExportTemplate({ electron: true })}
-    ${this.requestLogicTemplate()}
-    ${this.variablesLogicTemplate()}
     ${this.appMessagesLogicTemplate('electron')}
-    ${this.menuTemplate()}
-    ${this.mainToolbarTemplate()}
-    ${this._pageTemplate()}
-    ${this.variablesDrawerTemplate()}
-    ${this._analyticsTemplate()}
-    ${this.licenseTemplate()}
-    ${this.settingsViewTemplate({})}
-    ${this.restApisViewTemplate({})}
-    <arc-info-messages></arc-info-messages>
-    <arc-request-workspace id="workspace"></arc-request-workspace>
     `;
   }
+
+  render() {
+    return html`
+    ${this.applicationTemplate()}
+    `;
+  }
+  //
+  // render() {
+  //   return html`
+  //   ${this.modelsTemplate()}
+  //   ${this.importExportTemplate({ electron: true })}
+  //   ${this.requestLogicTemplate()}
+  //   ${this.variablesLogicTemplate()}
+  //   ${this.appMessagesLogicTemplate('electron')}
+  //   ${this.menuTemplate()}
+  //   ${this.mainToolbarTemplate()}
+  //   ${this._pageTemplate()}
+  //   ${this.variablesDrawerTemplate()}
+  //   ${this._analyticsTemplate()}
+  //   ${this.licenseTemplate()}
+  //   ${this.settingsViewTemplate({})}
+  //   ${this.restApisViewTemplate({})}
+  //   <arc-info-messages></arc-info-messages>
+  //   <arc-request-workspace id="workspace"></arc-request-workspace>
+  //   `;
+  // }
 
   get workspace() {
     if (!this._workspace) {
