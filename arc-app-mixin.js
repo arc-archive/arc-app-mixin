@@ -12,7 +12,7 @@ License for the specific language governing permissions and limitations under
 the License.
 */
 import { html } from 'lit-element/lit-element.js';
-import { menu, arrowBack, infoOutline, fileDownload } from '@advanced-rest-client/arc-icons/ArcIcons.js';
+import { menu, arrowBack, infoOutline, fileDownload, message } from '@advanced-rest-client/arc-icons/ArcIcons.js';
 import '@advanced-rest-client/arc-models/project-model.js';
 import '@advanced-rest-client/arc-models/rest-api-model.js';
 import '@advanced-rest-client/arc-models/host-rules-model.js';
@@ -1355,7 +1355,7 @@ export const ArcAppMixin = (base) => class extends base {
       ?compatibility="${compatibility}"
       aria-label="Activate to toggle application menu"
     >
-      <span class="icon" drawer-toggle>${menu}</span>
+      <span class="icon toolbar-icon" drawer-toggle>${menu}</span>
     </anypoint-icon-button>`;
   }
 
@@ -1374,7 +1374,7 @@ export const ArcAppMixin = (base) => class extends base {
       ?compatibility="${compatibility}"
       aria-label="Activate to go to the main screen"
     >
-      <span class="icon">${arrowBack}</span>
+      <span class="icon toolbar-icon">${arrowBack}</span>
     </anypoint-icon-button>`;
   }
 
@@ -1396,7 +1396,7 @@ export const ArcAppMixin = (base) => class extends base {
       aria-label="Activate to open application messages"
       @active-changed="${this._infoMessagesHandler}"
     >
-      <span class="icon">${infoOutline}</span>
+      <span class="icon toolbar-icon">${message}</span>
     </anypoint-icon-button>`;
   }
 
@@ -1414,7 +1414,7 @@ export const ArcAppMixin = (base) => class extends base {
       @click="${this.updateInstall}"
       title="Restart and install update"
     >
-      <span class="icon">${fileDownload}</span>
+      <span class="icon toolbar-icon">${fileDownload}</span>
     </anypoint-icon-button>`;
   }
 
@@ -1431,9 +1431,7 @@ export const ArcAppMixin = (base) => class extends base {
     } = this;
     return html`
     <div class="env-container">
-      <span class="env-label">Environment:</span>
       <environment-selector
-        nolabelfloat
         ?compatibility="${compatibility}"
         ?outlined="${outlined}"></environment-selector>
       <anypoint-icon-button

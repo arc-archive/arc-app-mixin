@@ -147,6 +147,11 @@ a.attribution {
   color: var(--arc-toolbar-button-color, inherit);
 }
 
+.toolbar-icon {
+  color: var(--arc-toolbar-icon-color, inherit);
+  fill: currentColor;
+}
+
 app-drawer-layout:not([narrow]) [drawer-toggle] {
   display: none;
 }
