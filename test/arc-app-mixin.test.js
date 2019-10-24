@@ -726,7 +726,7 @@ describe('ArcAppMixin', function() {
 
     it('Calls _requestAuthToken()', () => {
       const spy = sinon.spy(element, '_requestAuthToken');
-      const e = new CustomEvent('google-autorize', { bubbles: true, detail: {
+      const e = new CustomEvent('google-authorize', { bubbles: true, detail: {
         scope: 's1 s2 s3'
       } });
       document.body.dispatchEvent(e);
@@ -735,7 +735,7 @@ describe('ArcAppMixin', function() {
 
     it('Sets function arguments', () => {
       const spy = sinon.spy(element, '_requestAuthToken');
-      const e = new CustomEvent('google-autorize', { bubbles: true, detail: {
+      const e = new CustomEvent('google-authorize', { bubbles: true, detail: {
         scope: 's1 s2 s3'
       } });
       document.body.dispatchEvent(e);

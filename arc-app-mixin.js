@@ -321,7 +321,7 @@ export const ArcAppMixin = (base) => class extends base {
     window.addEventListener('navigate', this._handleNavigation);
     window.addEventListener('settings-changed', this._settingChanged);
     window.addEventListener('app-version', this._appVersionRequestHandler);
-    window.addEventListener('google-autorize', this._googleOauthTokenRequested);
+    window.addEventListener('google-authorize', this._googleOauthTokenRequested);
     window.addEventListener('import-data-inspect', this._inspectImportHandler);
     window.addEventListener('process-error', this._processErrorHandler);
     window.addEventListener('process-loading-start', this._processStartHandler);
@@ -335,7 +335,7 @@ export const ArcAppMixin = (base) => class extends base {
     window.removeEventListener('navigate', this._handleNavigation);
     window.removeEventListener('settings-changed', this._settingChanged);
     window.removeEventListener('app-version', this._appVersionRequestHandler);
-    window.removeEventListener('google-autorize', this._googleOauthTokenRequested);
+    window.removeEventListener('google-authorize', this._googleOauthTokenRequested);
     window.removeEventListener('import-data-inspect', this._inspectImportHandler);
     window.removeEventListener('process-error', this._processErrorHandler);
     window.removeEventListener('process-loading-start', this._processStartHandler);
@@ -392,7 +392,7 @@ export const ArcAppMixin = (base) => class extends base {
     componentUrl = `${dir}${scope}${path}.js`;
     this._loadingSources = true;
     try {
-      await import(componentUrl);
+      // await import(componentUrl);
     } catch (e) {
       this.log.warn(e);
       this._loadingSources = false;
@@ -777,7 +777,7 @@ export const ArcAppMixin = (base) => class extends base {
     e.detail.version = this.appVersion;
   }
   /**
-   * Handler for `google-autorize` custom event sent by Drive component.
+   * Handler for `google-authorize` custom event sent by Drive component.
    * It calls `_requestAuthToken()` function which should be implemented
    * for a specific platform.
    * @param {CustomEvent} e
