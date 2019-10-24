@@ -392,7 +392,7 @@ export const ArcAppMixin = (base) => class extends base {
     componentUrl = `${dir}${scope}${path}.js`;
     this._loadingSources = true;
     try {
-      // await import(componentUrl);
+      await import(componentUrl);
     } catch (e) {
       this.log.warn(e);
       this._loadingSources = false;
