@@ -1313,8 +1313,10 @@ export const ArcAppMixin = (base) => class extends base {
   }
 
   appMessagesLogicTemplate(platform) {
+    const { appChannel } = this;
     return html`<arc-messages-service
       platform="${platform}"
+      .channel="${appChannel}"
       @unread-changed="${this._unreadMessagesChanged}"
       @messages-changed="${this._appMessagesHandler}"
       id="msgService"
