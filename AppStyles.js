@@ -52,6 +52,7 @@ apic-electron {
 app-toolbar {
   background-color: var(--toolbar-background-color);
   color: var(--toolbar-color);
+  font-size: 1rem;
 }
 
 .env-container {
