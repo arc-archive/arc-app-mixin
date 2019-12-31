@@ -682,10 +682,8 @@ export const ArcAppMixin = (base) => class extends base {
    * it uses current active tab.
    */
   updateRequestTab(request, index) {
-    this.log.info('Updating request object...');
     const workspace = this.workspace;
     if (typeof index !== 'number') {
-      this.log.info('Tab index not set. Using current selection...');
       index = workspace.selected;
     }
     workspace.updateRequestObject(request, index);
@@ -796,9 +794,7 @@ export const ArcAppMixin = (base) => class extends base {
    * @param {Boolean} interactive
    * @param {Array<String>} scope
    */
-  _requestAuthToken() {
-    this.log.warn('_requestAuthToken() not implemented.');
-  }
+  _requestAuthToken() {}
   /**
    * Abstract method to be implemented by ARC instances to notify user about
    * an error.

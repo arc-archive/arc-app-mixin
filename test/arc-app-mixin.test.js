@@ -1,5 +1,5 @@
 import { fixture, assert, html, nextFrame, aTimeout } from '@open-wc/testing';
-import * as sinon from 'sinon/pkg/sinon-esm.js';
+import * as sinon from 'sinon';
 import * as MockInteractions from '@polymer/iron-test-helpers/mock-interactions.js';
 import { DataGenerator } from '@advanced-rest-client/arc-data-generator/arc-data-generator.js';
 import './test-element.js';
@@ -192,7 +192,6 @@ describe('ArcAppMixin', function() {
       ['data-export', 'Data export'],
       ['project', 'Project details'],
       ['request', 'Request panel'],
-      ['default', 'Request panel'],
       ['drive', 'Drive selector'],
       ['cookie-manager', 'Cookie manager'],
       // ['api-console', 'API Console'],
