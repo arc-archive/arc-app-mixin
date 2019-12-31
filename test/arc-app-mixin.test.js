@@ -35,6 +35,12 @@ describe('ArcAppMixin', function() {
     `);
   }
 
+  async function clientCertificateImportFixture() {
+    return await fixture(html`
+      <test-element clientCertificateImport></test-element>
+    `);
+  }
+
   describe('_loadComponent()', () => {
     let element;
     beforeEach(async () => {
@@ -1175,6 +1181,20 @@ describe('ArcAppMixin', function() {
       await aTimeout();
       const node = element.shadowRoot.querySelector('export-panel');
       assert.isTrue(node.withEncrypt);
+    });
+  });
+
+  describe('#clientCertificateImport', () => {
+    it('propagates clientCertificateImport property', async () => {
+      const element = await clientCertificateImportFixture();
+      const editor = element.shadowRoot.querySelector('arc-request-workspace');
+      assert.isTrue(editor.clientCertificateImport);
+    });
+
+    it('propagates only when set', async () => {
+      const element = await basicFixture();
+      const editor = element.shadowRoot.querySelector('arc-request-workspace');
+      assert.isUndefined(editor.clientCertificateImport);
     });
   });
 });

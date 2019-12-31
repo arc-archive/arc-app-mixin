@@ -289,7 +289,11 @@ export const ArcAppMixin = (base) => class extends base {
        */
       withEncrypt: { type: Boolean },
 
-      _variablesOverlayOpened: { type: Boolean }
+      _variablesOverlayOpened: { type: Boolean },
+      /**
+       * Enables "import" button in client certificate authorization panel
+       */
+      clientCertificateImport: { type: Boolean, panelProperty: true },
     };
   }
 
@@ -1539,7 +1543,8 @@ export const ArcAppMixin = (base) => class extends base {
       narrow,
       compatibility,
       outlined,
-      withEncrypt
+      withEncrypt,
+      clientCertificateImport,
     } = this;
     const config = this.config || {};
     const workspaceHidden = this.page !== 'request';
@@ -1549,6 +1554,7 @@ export const ArcAppMixin = (base) => class extends base {
       ?draggableenabled="${config.draggableEnabled}"
       oauth2redirecturi="${_oauth2redirectUri}"
       ?ignorecontentonget="${config.ignoreContentOnGet}"
+      ?clientCertificateImport="${clientCertificateImport}"
       ?narrow="${narrow}"
       ?hidden="${workspaceHidden}"
       @open-web-url="${this._openWebUrlHandler}"
