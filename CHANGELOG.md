@@ -262,3 +262,24 @@
  [1037688](https://github.com/advanced-rest-client/arc-app-mixin/commit/10376885744eda8ff7a4662c44a03fefd9a219ce) by Pawel Psztyc
 
 
+<a name="4.0.2"></a>
+## [4.0.2](https://github.com/advanced-rest-client/arc-app-mixin/compare/4.0.0...4.0.2) (2020-01-08)
+
+### Build
+
+* bumping version [4fb9a01](https://github.com/advanced-rest-client/arc-app-mixin/commit/4fb9a01fd626410927b35cc8e3a68322b012a5ec) by Pawel
+* bumping version [e21e4cf](https://github.com/advanced-rest-client/arc-app-mixin/commit/e21e4cfcd2a8e10dc1c15b5b7be71d700af83d66) by Pawel Psztyc
+
+
+### Update
+
+* upgrading dependencies [d103c37](https://github.com/advanced-rest-client/arc-app-mixin/commit/d103c379fa4f42e2ec0d082a8fd06ebfb09ac888) by Pawel
+* [ci skip] automated merge master->stage. syncing main branches [9139c04](https://github.com/advanced-rest-client/arc-app-mixin/commit/9139c04dad668da21d2413c7acfd7289a931a93f) by Ci agent
+* adding `clientCertificateImport` option [cbbab25](https://github.com/advanced-rest-client/arc-app-mixin/commit/cbbab2530f4b0ea226049fc8f09757df9736e9b8) by Pawel Psztyc
+
+
+### Testing
+
+* fixing tests [9d93fa4](https://github.com/advanced-rest-client/arc-app-mixin/commit/9d93fa4b449e05323f7520baa4ae8b6d017ade8f) by Pawel Psztyc
+
+
