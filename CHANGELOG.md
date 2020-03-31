@@ -317,3 +317,38 @@
 * removing legacy config [d2eff82](https://github.com/advanced-rest-client/arc-app-mixin/commit/d2eff82a8e841dc5adb3e6c3fd30bbbd7703bb59) by Pawel
 
 
+<a name="5.0.1"></a>
+## [5.0.1](https://github.com/advanced-rest-client/arc-app-mixin/compare/4.0.2...5.0.1) (2020-03-31)
+
+### Build
+
+* bumping version [b03f47b](https://github.com/advanced-rest-client/arc-app-mixin/commit/b03f47b69a9ec7e4ceb573428629abfdfd1ab663) by Pawel
+* bumping version [4857e7c](https://github.com/advanced-rest-client/arc-app-mixin/commit/4857e7c83dfac3978413f1e32aaa8ff17514e0c0) by Pawel
+
+
+### Continuous integration
+
+* fixing Travis config [6cb96d3](https://github.com/advanced-rest-client/arc-app-mixin/commit/6cb96d313633d4963c66cc32e8e7ac684e2e2d9b) by Pawel
+
+
+### Update
+
+* upgrading demo page [9f4a8e2](https://github.com/advanced-rest-client/arc-app-mixin/commit/9f4a8e2b5b58f45ff2b7d57aa732efaa47114d5d) by Pawel
+* upograding request editor [a1e338e](https://github.com/advanced-rest-client/arc-app-mixin/commit/a1e338e1e349fd148596526b13c7f916a32febc4) by Pawel
+* [ci skip] automated merge master->stage. syncing main branches [8951bac](https://github.com/advanced-rest-client/arc-app-mixin/commit/8951baccd232283a5a551807a110e9b7f2e51e97) by Ci agent
+* upgrading core dependencies with major changes [5810c1e](https://github.com/advanced-rest-client/arc-app-mixin/commit/5810c1edecc55bcdcd085805d22b9c0d521d211a) by Pawel
+* upgrading depdnencies [00c07c7](https://github.com/advanced-rest-client/arc-app-mixin/commit/00c07c74a5e3df1174c6afafac58aaa34c0d276c) by Pawel
+* [ci skip] automated merge master->stage. syncing main branches [6e5a1e6](https://github.com/advanced-rest-client/arc-app-mixin/commit/6e5a1e62c3ce4b6bda6239fe45c020f4fb46d4c8) by Ci agent
+
+
+### Features
+
+* adding support for detailed search in history / saved [733a40c](https://github.com/advanced-rest-client/arc-app-mixin/commit/733a40ce503f415525f7bd3c70af22e6bfd47605) by Pawel
+
+
+### Testing
+
+* updating SL configuration [95366f8](https://github.com/advanced-rest-client/arc-app-mixin/commit/95366f8b8c300544c03c57f6b301e5630015f80c) by Pawel
+* removing legacy config [d2eff82](https://github.com/advanced-rest-client/arc-app-mixin/commit/d2eff82a8e841dc5adb3e6c3fd30bbbd7703bb59) by Pawel
+
+
