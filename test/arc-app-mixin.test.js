@@ -1183,6 +1183,52 @@ describe('ArcAppMixin', function() {
     });
   });
 
+  describe('Detailed history search', () => {
+    it('sets detailedSearch by default', async () => {
+      const element = await componentFixture();
+      await element._pageChanged('history');
+      element.page = 'history';
+      await aTimeout();
+      const node = element.shadowRoot.querySelector('history-panel');
+      assert.isTrue(node.detailedSearch);
+    });
+
+    it('does not set detailedSearch when fast search is set', async () => {
+      const element = await componentFixture();
+      element.config = {
+        fastSearch: true
+      };
+      await element._pageChanged('history');
+      element.page = 'history';
+      await aTimeout();
+      const node = element.shadowRoot.querySelector('history-panel');
+      assert.isFalse(node.detailedSearch);
+    });
+  });
+
+  describe('Detailed saved search', () => {
+    it('sets detailedSearch by default', async () => {
+      const element = await componentFixture();
+      await element._pageChanged('saved');
+      element.page = 'saved';
+      await aTimeout();
+      const node = element.shadowRoot.querySelector('saved-requests-panel');
+      assert.isTrue(node.detailedSearch);
+    });
+
+    it('does not set detailedSearch when fast search is set', async () => {
+      const element = await componentFixture();
+      element.config = {
+        fastSearch: true
+      };
+      await element._pageChanged('saved');
+      element.page = 'saved';
+      await aTimeout();
+      const node = element.shadowRoot.querySelector('saved-requests-panel');
+      assert.isFalse(node.detailedSearch);
+    });
+  });
+
   describe('#clientCertificateImport', () => {
     it('propagates clientCertificateImport property', async () => {
       const element = await clientCertificateImportFixture();

@@ -1577,9 +1577,10 @@ export const ArcAppMixin = (base) => class extends base {
     const {
       compatibility,
       outlined,
-      withEncrypt
+      withEncrypt,
+      config={},
     } = this;
-    const config = this.config || {};
+    const detailedSearch = !config.fastSearch;
     return html`
       <history-panel
       .listType="${config.viewListType}"
@@ -1587,6 +1588,7 @@ export const ArcAppMixin = (base) => class extends base {
       ?compatibility="${compatibility}"
       ?outlined="${outlined}"
       ?withEncrypt="${withEncrypt}"
+      ?detailedSearch="${detailedSearch}"
     ></history-panel>
     `;
   }
@@ -1595,9 +1597,10 @@ export const ArcAppMixin = (base) => class extends base {
     const {
       compatibility,
       outlined,
-      withEncrypt
+      withEncrypt,
+      config={},
     } = this;
-    const config = this.config || {};
+    const detailedSearch = !config.fastSearch;
     return html`
       <saved-requests-panel
       .listType="${config.viewListType}"
@@ -1605,6 +1608,7 @@ export const ArcAppMixin = (base) => class extends base {
       ?compatibility="${compatibility}"
       ?outlined="${outlined}"
       ?withEncrypt="${withEncrypt}"
+      ?detailedSearch="${detailedSearch}"
     ></saved-requests-panel>
     `;
   }
