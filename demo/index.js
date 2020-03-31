@@ -1,5 +1,5 @@
 import { LitElement, html } from 'lit-element';
-import { ArcDemoPage } from '@advanced-rest-client/arc-demo-helper/ArcDemoPage.js';
+import { DemoPage } from '@advanced-rest-client/arc-demo-helper';
 import '@advanced-rest-client/arc-local-store-preferences/arc-local-store-workspace.js';
 import '@advanced-rest-client/arc-local-store-preferences/arc-local-store-preferences.js';
 import { ArcAppMixin } from '../arc-app-mixin.js';
@@ -30,12 +30,12 @@ class ArcApp extends ArcAppMixin(LitElement) {
 }
 window.customElements.define('arc-app', ArcApp);
 
-class DemoPage extends ArcDemoPage {
+class ComponentDemo extends DemoPage {
   constructor() {
     super();
     // this.initObservableProperties([
     // ]);
-    this._componentName = 'arc-app-mixin';
+    this.componentName = 'arc-app-mixin';
 
     this._appActionHandler = this._appActionHandler.bind(this);
 
@@ -132,7 +132,7 @@ class DemoPage extends ArcDemoPage {
   }
 }
 
-const instance = new DemoPage();
+const instance = new ComponentDemo();
 instance.render();
 window._demo = instance;
 setTimeout(() => {
