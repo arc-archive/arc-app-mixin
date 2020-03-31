@@ -283,3 +283,37 @@
 * fixing tests [9d93fa4](https://github.com/advanced-rest-client/arc-app-mixin/commit/9d93fa4b449e05323f7520baa4ae8b6d017ade8f) by Pawel Psztyc
 
 
+<a name="5.0.0"></a>
+# [5.0.0](https://github.com/advanced-rest-client/arc-app-mixin/compare/4.0.1...5.0.0) (2020-03-31)
+
+## Build
+
+* bumping version [4857e7c](https://github.com/advanced-rest-client/arc-app-mixin/commit/4857e7c83dfac3978413f1e32aaa8ff17514e0c0) by Pawel
+* bumping version [4fb9a01](https://github.com/advanced-rest-client/arc-app-mixin/commit/4fb9a01fd626410927b35cc8e3a68322b012a5ec) by Pawel
+
+
+## Continuous integration
+
+* fixing Travis config [6cb96d3](https://github.com/advanced-rest-client/arc-app-mixin/commit/6cb96d313633d4963c66cc32e8e7ac684e2e2d9b) by Pawel
+
+
+## Update
+
+* upgrading core dependencies with major changes [5810c1e](https://github.com/advanced-rest-client/arc-app-mixin/commit/5810c1edecc55bcdcd085805d22b9c0d521d211a) by Pawel
+* upgrading depdnencies [00c07c7](https://github.com/advanced-rest-client/arc-app-mixin/commit/00c07c74a5e3df1174c6afafac58aaa34c0d276c) by Pawel
+* [ci skip] automated merge master->stage. syncing main branches [6e5a1e6](https://github.com/advanced-rest-client/arc-app-mixin/commit/6e5a1e62c3ce4b6bda6239fe45c020f4fb46d4c8) by Ci agent
+* upgrading dependencies [d103c37](https://github.com/advanced-rest-client/arc-app-mixin/commit/d103c379fa4f42e2ec0d082a8fd06ebfb09ac888) by Pawel
+* [ci skip] automated merge master->stage. syncing main branches [9139c04](https://github.com/advanced-rest-client/arc-app-mixin/commit/9139c04dad668da21d2413c7acfd7289a931a93f) by Ci agent
+
+
+## Features
+
+* adding support for detailed search in history / saved [733a40c](https://github.com/advanced-rest-client/arc-app-mixin/commit/733a40ce503f415525f7bd3c70af22e6bfd47605) by Pawel
+
+
+## Testing
+
+* updating SL configuration [95366f8](https://github.com/advanced-rest-client/arc-app-mixin/commit/95366f8b8c300544c03c57f6b301e5630015f80c) by Pawel
+* removing legacy config [d2eff82](https://github.com/advanced-rest-client/arc-app-mixin/commit/d2eff82a8e841dc5adb3e6c3fd30bbbd7703bb59) by Pawel
+
+
